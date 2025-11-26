@@ -17,7 +17,7 @@ SerialCommand readSerialCommand() {
 
     while (Serial.available()) {
         char c = Serial.read();
-
+	
         if (c == '\n' || c == '\r') {
             if (linePos > 0) {
                 lineBuffer[linePos] = '\0';
@@ -25,14 +25,12 @@ SerialCommand readSerialCommand() {
                 linePos = 0;
 
                 line.trim();
-                line.toUpperCase();
 
                 // Parse commands
-                if (line.startsWith("LABEL:")) {
-                    cmd.type = CMD_LABEL;
-                    cmd.argument = parseLabel(line.substring(6)); // after "LABEL:"
-                } else if (line == "TRAIN") {
+                if (line == "TRAIN") {
                     cmd.type = CMD_TRAIN;
+                } else if (line == "VALIDATE") {
+		    cmd.type = CMD_VAL;
                 } else if (line == "INFER") {
                     cmd.type = CMD_INFER;
                 } else if (line == "STOP") {
@@ -50,30 +48,98 @@ SerialCommand readSerialCommand() {
     return cmd; // No complete command yet
 }
 
+
+// --- Data Reading Function ---
+//
+// wraps parseWindow()
+//
+
+bool parseDataStream() {
+
+
+    /*
+     *
+     * Set the following global variables:
+     *
+     * FeatureVector windowBuffer[WINDOW_SIZE];
+     * uint8_t labelsBuffer[WINDOW_SIZE]; 
+     * uint16_t nSamples = 0; 
+     *
+     */
+
+    const size_t BUFFER_SIZE = (NUM_FEATURES * MAX_FLOAT_LEN) + MAX_UINT8_LEN + NUM_DELIMITERS + NULL_TERM_LEN;
+    char dataBuffer[BUFFER_SIZE];
+
+    nSamples = 0;
+
+    while (nSamples < WINDOW_SIZE && parseWindow(windowBuffer[nSamples], &labelsBufer[nSamples], dataBuffer, BUFFER_SIZE)) {
+	Serial.println("Parsed sample:", nSample);
+	nSamples++;
+    }
+    return nSamples == WINDOW_SIZE;
+}
+
+// --- main parser of data stream ---
+// Expected input feature,...,feature,label
+// Max decimals in feature is #MAX_FLOAT_LEN
+//
+// return success status
+//
+bool parseWindow(FeatureVector& featureWindow, uint8_t* label, char* dataBuffer, size_t bufferSize) {
+    // Read the entire incoming line until a newline ('\n')
+    int bytesRead = Serial.readBytesUntil('\n', dataBuffer, BUFFER_SIZE - 1);
+
+    if (bytesRead == 0) {
+        return false;
+    }
+    dataBuffer[bytesRead] = '\0'; // Null-terminate the string
+
+    // Tokenize the string using ',' as the delimiter
+    char* token;
+    token = strtok(dataBuffer, ",");
+
+    // Loop through and parse the expected number of float features
+    for (size_t i = 0; i < NUM_FEATURES; i++) {
+        if (token == NULL) {
+            // Did not find enough tokens
+            Serial.println("Error: Insufficient feature tokens.");
+            return false;
+        }
+
+        // Convert the token string to a float
+        featureWindow.features[i] = atof(token);
+
+        // Get the next token (will return NULL if no more tokens are found)
+        token = strtok(NULL, ","); 
+    }
+
+    // Parse the final uint8_t label
+    if (token == NULL) {
+        Serial.println("Error: Missing label token.");
+        return false;
+    }
+
+    // Convert the token string to an integer
+    long tempLabel = atol(token); // Temporarily a long
+
+    // Validate and assign the label
+    //
+    // Range check...
+    if (tempLabel >= 0 && tempLabel <= 255) {
+	// Cast to uint8_t and set value
+        *label = (uint8_t)tempLabel; 
+        return true;
+    } else {
+        Serial.print("Label out of range: ");
+        Serial.println(tempLabel);
+        return false;
+    }
+}
+
 // Send training loss
 void sendTrainLoss(float loss) {
     Serial.print("TRAIN_LOSS:");
     Serial.println(loss, 4);
-}
-
-// Parse the incoming string
-uint8_t parseLabel(const String& str) {
-    switch(str) {
-        case "SITTING": 
-        case "0":
-                return 0;
-        case "1":
-        case "STANDING": 
-                return 1;
-        case "2":
-        case "SITTING": 
-                return 2;
-        case "3":
-        case "ACTIVE": 
-                return 3;
-	default:
-    		return 255; // Invalid
-    }
 }
 
 // Send validation loss
@@ -83,7 +149,7 @@ void sendValLoss(float loss) {
 }
 
 // Send prediction result
-void sendPrediction(unint8_t label) {
+void sendPrediction(uint8_t label) {
     Serial.print("PRED:");
     Serial.println(label);
 }
