@@ -23,23 +23,14 @@ enum SerialCommandType {
     CMD_STOP
 };
 
-// Parsed command structure
-struct SerialCommand {
-    SerialCommandType type;
-    uint8_t label;  // 0=SITTING, 1=STANDING, 2=LYING, 3=ACTIVE
-};
-
-// Read label
-uint8_t parseLabel(const String& str);
-
 // Initialize serial communication
 void initSerial();
 
 // Check for a new command, returns CMD_NONE if none available
-SerialCommand readSerialCommand();
+SerialCommandType readSerialCommand();
 
 // Set all windows with their features and labels
-bool parseDataStream(void);
+bool parseDataStream(FeatureVector (&windowBuffer)[WINDOW_SIZE], uint16_t* nSamples, uint8_t (&labelsBuffer)[WINDOW_SIZE]);
 
 // Parse a single Window
 bool parseWindow(FeatureVector& featureWindow, uint8_t* label, char* dataBuffer, size_t bufferSize);

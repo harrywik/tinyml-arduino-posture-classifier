@@ -1,3 +1,4 @@
+#include "imu_features.h"
 #include "serial_protocol.h"
 
 static char lineBuffer[MAX_LINE_LENGTH];
@@ -11,9 +12,9 @@ void initSerial() {
 }
 
 // Read a line from Serial and parse it into a command
-SerialCommand readSerialCommand() {
-    SerialCommand cmd;
-    cmd.type = CMD_NONE;
+SerialCommandType readSerialCommand() {
+    SerialCommandType cmd;
+    cmd = CMD_NONE;
 
     while (Serial.available()) {
         char c = Serial.read();
@@ -28,13 +29,13 @@ SerialCommand readSerialCommand() {
 
                 // Parse commands
                 if (line == "TRAIN") {
-                    cmd.type = CMD_TRAIN;
+                    cmd = CMD_TRAIN;
                 } else if (line == "VALIDATE") {
-		    cmd.type = CMD_VAL;
+		    cmd = CMD_VAL;
                 } else if (line == "INFER") {
-                    cmd.type = CMD_INFER;
+                    cmd = CMD_INFER;
                 } else if (line == "STOP") {
-                    cmd.type = CMD_STOP;
+                    cmd = CMD_STOP;
                 }
                 return cmd;
             }
@@ -54,29 +55,27 @@ SerialCommand readSerialCommand() {
 // wraps parseWindow()
 //
 
-bool parseDataStream() {
-
+bool parseDataStream(FeatureVector (&windowBuffer)[WINDOW_SIZE], uint16_t* nSamples, uint8_t (&labelsBuffer)[WINDOW_SIZE]) {
 
     /*
      *
-     * Set the following global variables:
+     * Sets the following variables:
      *
      * FeatureVector windowBuffer[WINDOW_SIZE];
      * uint8_t labelsBuffer[WINDOW_SIZE]; 
-     * uint16_t nSamples = 0; 
+     * uint16_t nSamples; 
      *
      */
 
     const size_t BUFFER_SIZE = (NUM_FEATURES * MAX_FLOAT_LEN) + MAX_UINT8_LEN + NUM_DELIMITERS + NULL_TERM_LEN;
     char dataBuffer[BUFFER_SIZE];
 
-    nSamples = 0;
+    *nSamples = 0;
 
-    while (nSamples < WINDOW_SIZE && parseWindow(windowBuffer[nSamples], &labelsBufer[nSamples], dataBuffer, BUFFER_SIZE)) {
-	Serial.println("Parsed sample:", nSample);
-	nSamples++;
-    }
-    return nSamples == WINDOW_SIZE;
+    while (*nSamples < WINDOW_SIZE && parseWindow(windowBuffer[*nSamples], &labelsBuffer[*nSamples], dataBuffer, BUFFER_SIZE))
+	(*nSamples)++;
+    
+    return *nSamples == WINDOW_SIZE;
 }
 
 // --- main parser of data stream ---
@@ -87,7 +86,7 @@ bool parseDataStream() {
 //
 bool parseWindow(FeatureVector& featureWindow, uint8_t* label, char* dataBuffer, size_t bufferSize) {
     // Read the entire incoming line until a newline ('\n')
-    int bytesRead = Serial.readBytesUntil('\n', dataBuffer, BUFFER_SIZE - 1);
+    int bytesRead = Serial.readBytesUntil('\n', dataBuffer, bufferSize - 1);
 
     if (bytesRead == 0) {
         return false;

@@ -3,7 +3,7 @@
 #include "imu_features.h"
 
 #define RESERVOIR_SIZE 20    // Number of reservoir neurons
-#define OUTPUT_SIZE 4        // Number of classes: Sitting, Standing, Lying, Active
+#define OUTPUT_SIZE 3        // Number of classes: Sitting, Standing, Moving
 #define INPUT_SIZE NUM_FEATURES
 #define LEAKY 0.3           // Leaky integration parameter
 

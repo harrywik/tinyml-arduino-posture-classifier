@@ -1,5 +1,5 @@
-#include "main.h"
 #include "esn.h"
+#include "engine.h"
 #include "imu_features.h"
 #include "serial_protocol.h"
 
@@ -10,6 +10,6 @@ void setup() {
 }
 
 void loop() {
-  main();
+  runIteration();
 }
 
