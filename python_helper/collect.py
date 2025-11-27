@@ -27,6 +27,9 @@ def collect_cycle(ser, csv_path: str, n_features: int) -> bool:
 
     # --- Data Collection Loop ---
     rows = []
+    header = [f"f{i}" for i in range(n_features)]
+    header.append("label")
+
     while True:
         line = read_line(ser)
         if not line:
@@ -36,7 +39,7 @@ def collect_cycle(ser, csv_path: str, n_features: int) -> bool:
         if line == "</data>":
             # End of this iteration
             # Write to csv
-            append_or_create_csv(Path(csv_path), rows, n_features)
+            append_or_create_csv(Path(csv_path), header, rows)
             return True 
         elif line == "<data>":
             start = True
