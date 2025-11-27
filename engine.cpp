@@ -8,7 +8,19 @@ FeatureVector windowBuffer[WINDOW_SIZE];
 uint8_t labelsBuffer[WINDOW_SIZE];
 uint16_t nSamples = 0;
 
-void runIteration(void) {
+void runIteration(CommunicationMode mode) {
+	if (mode == USB) {
+		// Communicating with user over USB
+		handleUSBCommands();
+		return;
+	}
+	// Communicating over BLE
+	handleBLECommands();
+	
+}
+
+
+void handleUSBCommands(void) {
 	SerialCommandType order = readSerialCommand();
 	String msg;
 	switch (order) {

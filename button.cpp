@@ -1,0 +1,51 @@
+#include "button.h"
+
+const size_t USER_BUTTON_PIN = 4;
+const long LONG_PRESS_THRESHOLD_MS = 3000; // 3 second (3000 ms)
+
+// init button
+void initButton(void) {
+	pinMode(USER_BUTTON_PIN, INPUT_PULLUP);
+}
+
+/*
+ *
+ * Long press: BLE
+ * Short press: USB
+ * No press: function is called again by in PostureProject.setup()
+ *
+ * this is only executed once.
+ *
+ */
+
+CommunicationMode getCommunicationMode(void) {
+
+	// Timing and state variables
+	long pressStartTime = 0;
+	bool buttonPressed = false;
+	int buttonState = digitalRead(USER_BUTTON_PIN);
+
+  	// If the button is LOW (pressed) AND we haven't started tracking a press yet
+  	if (buttonState == LOW && !buttonPressed) {
+    		// Mark the button as pressed
+    		buttonPressed = true;
+    		// Record the start time (Debouncing handled by only setting time once)
+    		pressStartTime = millis();
+  	}
+
+  	// If the button is still pressed AND the long press time has passed
+  	if (buttonPressed && buttonState == LOW && millis() - pressStartTime >= LONG_PRESS_THRESHOLD_MS)
+		return BLE;
+
+	// If the button is HIGH (released) AND we were tracking a press
+	if (buttonState == HIGH && buttonPressed) {
+		long pressDuration = millis() - pressStartTime;
+		// Check if the press lasted long enough to be intentional
+		if (pressDuration > 50)
+			return USB;
+      	} 
+
+	// Add small delay before checking again
+  	delay(5);
+	return NOT_INITIATED;
+}
