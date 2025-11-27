@@ -1,6 +1,7 @@
+#include <Arduino.h>
 #include "button.h"
 
-const size_t USER_BUTTON_PIN = 4;
+const uint8_t USER_BUTTON_PIN = 4;
 const long LONG_PRESS_THRESHOLD_MS = 3000; // 3 second (3000 ms)
 
 // init button
@@ -47,5 +48,4 @@ CommunicationMode getCommunicationMode(void) {
 
 	// Add small delay before checking again
   	delay(5);
-	return NOT_INITIATED;
 }

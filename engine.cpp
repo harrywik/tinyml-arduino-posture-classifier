@@ -19,6 +19,11 @@ void runIteration(CommunicationMode mode) {
 	
 }
 
+void handleBLECommands(void) {
+	// TODO:
+	// implement this
+}
+
 
 void handleUSBCommands(void) {
 	SerialCommandType order = readSerialCommand();

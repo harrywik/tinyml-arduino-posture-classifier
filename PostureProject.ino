@@ -1,12 +1,14 @@
+#include "ble.h"
 #include "esn.h"
 #include "engine.h"
 #include "button.h"
 #include "imu_features.h"
 #include "serial_protocol.h"
 
-CommunicatonMode coms = NOT_INITIATED;
+CommunicationMode coms = NOT_INITIATED;
 
 void setup() {
+    initButton();
     while (coms == NOT_INITIATED)
       // No press
       coms = getCommunicationMode();
