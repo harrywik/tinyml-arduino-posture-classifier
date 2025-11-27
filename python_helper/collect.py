@@ -2,59 +2,65 @@ import argparse
 import serial
 import time
 import csv
-from helpers import send_line, read_line
+from pathlib import Path
+from helpers import (
+    send_line, 
+    read_line,
+    append_or_create_csv
+)
 
-NUM_FEATURES = 12  # must match Arduino
+def collect_cycle(ser, csv_path: str, n_features: int) -> bool:
+    label: int
+    while True:
+        goahead = input("Ready to collect? (y/n): ").strip().lower()
 
-LABEL_MAP = {'SITTING': 0, 'STANDING': 1, 'LYING': 2, 'ACTIVE': 3}
+        if goahead == "n":
+            print("\nUser unready to collect data. Stopping.")
+            return False 
+
+        if goahead == "y":
+            label = int(input("Enter label (0=SITTING, 1=STANDING, 2=ACTIVE): ").strip())
+            break
+
+    assert label in [0, 1, 2], "Bad label"
+    send_line(ser, "COLLECT")
+
+    # --- Data Collection Loop ---
+    rows = []
+    while True:
+        line = read_line(ser)
+        if not line:
+            continue
+        begin = "<row>"
+        end = "</row>"
+        if line == "</data>":
+            # End of this iteration
+            # Write to csv
+            append_or_create_csv(Path(csv_path), rows, n_features)
+            return True 
+        elif line == "<data>":
+            start = True
+        elif line.startswith(begin) and start:
+            feature_str = line[len(begin):-len(end)]
+            row = [float(f) for f in feature_str.split(",")]
+            row.append(label)
+            rows.append(row)
 
 def collect_features(device, baudrate, nfeats, csv_name):
     ser = serial.Serial(device, baudrate, timeout=0.1)
-    time.sleep(2)  # wait for Arduino reset
+    time.sleep(2)
     print("Starting feature collection. Press Ctrl+C to stop.")
 
-    with open(csv_name, 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow([f'f{i}' for i in range(nfeats)] + ['label'])
+    try:
+        while collect_cycle(ser, csv_name, nfeats):
+            pass 
 
-        loop(writer, ser)
+    except KeyboardInterrupt:
+        print("\nFeature collection stopped by user.")
 
-def loop(writer, ser):
-        try:
-            label = -1;
-            while True:
-                goahead = input("Ready to collect? (y/n): ").strip().lower()
-                if goahead == "n":
-                    raise KeyboardInterrupt("User unready to collect data")
-
-                label = int(input("Enter label (0=SITTING, 1=STANDING, 2=ACTIVE): ").strip())
-
-                send_line("COLLECT")
-
-            assert label in [0, 1, 2], "Bad label"
-
-            start = False
-
-            while True:
-                line = read_line(ser)
-
-                begin = "<row>"
-                end = "</row>"
-
-                if line == "</data>":
-                    # Ready for next label and data stream
-                    loop(writer, ser)
-                elif line == "<data>":
-                    start = True
-                elif line.startswith(begin) and start:
-                    feature_str = line[len(begin):-len(end)]
-                    features = [float(f) for f in feature_str.split(",")]
-                    writer.writerow(features + [label])
-
-        except KeyboardInterrupt:
-            print("Feature collection stopped by user.")
-        finally:
-            ser.close()
+    finally:
+        ser.close()
+        print("Serial connection closed.")
 
 
 if __name__ == "__main__":
