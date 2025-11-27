@@ -10,3 +10,6 @@ void initButton(void);
 
 CommunicationMode getCommunicationMode(void);
 
+void communicateBLEMode(void);
+
+void communicateUSBMode(void);
