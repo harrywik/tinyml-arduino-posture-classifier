@@ -1,3 +1,4 @@
+#include "engine.h"
 #include "imu_features.h"
 #include "serial_protocol.h"
 
@@ -30,6 +31,8 @@ SerialCommandType readSerialCommand() {
                 // Parse commands
                 if (line == "TRAIN") {
                     cmd = CMD_TRAIN;
+                } else if (line == "COLLECT") {
+		    cmd = CMD_COLLECT;
                 } else if (line == "VALIDATE") {
 		    cmd = CMD_VAL;
                 } else if (line == "INFER") {
@@ -54,8 +57,7 @@ SerialCommandType readSerialCommand() {
 //
 // wraps parseWindow()
 //
-
-bool parseDataStream(FeatureVector (&windowBuffer)[WINDOW_SIZE], uint16_t* nSamples, uint8_t (&labelsBuffer)[WINDOW_SIZE]) {
+void parseDataStream(FeatureVector (&windowBuffer)[WINDOW_SIZE], uint16_t* nSamples, uint8_t (&labelsBuffer)[WINDOW_SIZE]) {
 
     /*
      *
@@ -71,11 +73,13 @@ bool parseDataStream(FeatureVector (&windowBuffer)[WINDOW_SIZE], uint16_t* nSamp
     char dataBuffer[BUFFER_SIZE];
 
     *nSamples = 0;
-
-    while (*nSamples < WINDOW_SIZE && parseWindow(windowBuffer[*nSamples], &labelsBuffer[*nSamples], dataBuffer, BUFFER_SIZE))
-	(*nSamples)++;
-    
-    return *nSamples == WINDOW_SIZE;
+    while (*nSamples < WINDOW_SIZE) {
+        if (parseWindow(windowBuffer[*nSamples], &labelsBuffer[*nSamples], dataBuffer, BUFFER_SIZE)) {
+            (*nSamples)++;
+        } else {
+	    return;
+        }
+    }
 }
 
 // --- main parser of data stream ---
@@ -135,22 +139,43 @@ bool parseWindow(FeatureVector& featureWindow, uint8_t* label, char* dataBuffer,
     }
 }
 
-// Send training loss
-void sendTrainLoss(float loss) {
-    Serial.print("TRAIN_LOSS:");
-    Serial.println(loss, 4);
-}
-
-// Send validation loss
-void sendValLoss(float loss) {
-    Serial.print("VAL_LOSS:");
-    Serial.println(loss, 4);
-}
-
 // Send prediction result
-void sendPrediction(uint8_t label) {
-    Serial.print("PRED:");
-    Serial.println(label);
+void sendPrediction(uint8_t label, OperationMode mode) {
+	String start, end;
+	switch (mode) {
+		case TRAINING:
+			start = "<train>";
+			end = "</train>";
+			break;
+		case VALIDATION:
+			start = "<val>";
+			end = "</val>";
+			break;
+		case INFERENCE:
+			start = "<pred>";
+			end = "</pred>";
+			break;
+		default:
+			return;
+	}
+	Serial.print(start);
+	Serial.print(label);
+	Serial.println(end);
+}
+
+void transmitCollectedWindow(FeatureVector (&window)[WINDOW_SIZE]) {
+	Serial.println("<data>");
+	for (size_t wi = 0; wi < WINDOW_SIZE; wi++) {
+		Serial.print("<row>");
+		for (size_t fi = 0; fi < NUM_FEATURES; fi++) {
+			Serial.print(window[wi].features[fi]);
+			if (fi != NUM_FEATURES - 1)
+				Serial.print(",");
+		}
+		Serial.println("</row>");
+
+	}
+	Serial.println("</data>");
 }
 
 // Send generic message

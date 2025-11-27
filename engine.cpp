@@ -13,33 +13,73 @@ void runIteration(void) {
 	String msg;
 	switch (order) {
 		case CMD_NONE:
+			// Return early no message or action (default)
 			return;
 		case CMD_STOP:
 			nSamples = 0;
 			mode = IDLE;
-			msg = "Stop command received";
+			sendMessage("[CMD=STOP]: RECEIVED");
+			// Defer done message
+			msg = "[CMD=STOP]: DONE";
 			break;
 		case CMD_COLLECT:
 			mode = COLLECTION;
-			msg = "Collection initiated";
-			// collect();
-			// transmitCollected();
+			sendMessage("[CMD=COLLECT]: RECEIVED");
+			// Defer done message
+			msg = "[CMD=COLLECT]: DONE";
+			collectWindow(windowBuffer);
+			transmitCollectedWindow(windowBuffer);
 			break;
 		case CMD_TRAIN:
 			mode = TRAINING;
-			msg = "Parsed incoming data and trained.";
+			sendMessage("[CMD=TRAIN]: RECEIVED") ;
+			// Defer done message
+			msg = "[CMD=TRAIN]: DONE";
+			sendMessage("[IO]: STREAM");
 			parseDataStream(windowBuffer, &nSamples, labelsBuffer);
-			sendMessage("[Training]: START");
-            		trainOutputLayer(windowBuffer, labelsBuffer, nSamples, 0.01f);
-			sendMessage("[Training]: DONE");
+			if (nSamples == 0) {
+				sendMessage("[IO]: TIMEOUT OR MALFORMED");
+				long currentTimeout = Serial.getTimeout();
+				Serial.print("Current Serial Timeout (ms): ");
+				Serial.println(currentTimeout);
+			} else {
+				sendMessage("[TRAIN]: START");
+            			trainOutputLayer(windowBuffer, labelsBuffer, nSamples, 0.01f);
+				Serial.println("<result>");
+				size_t i = 0;
+				while (nSamples--) {
+					updateReservoir(windowBuffer[i++]);
+					uint8_t prediction = predict();
+					sendPrediction(prediction, mode);
+				}
+				Serial.println("</result>");
+				sendMessage("[TRAIN]: DONE");
+			}
 		     	break;
 		case CMD_VAL:
-		     	mode = TRAINING;
-			msg = "Parsed incoming data and predicted.";
+		     	mode = VALIDATION;
+			sendMessage("[CMD=VAL]: RECEIVED");
+			// Defer done message
+			msg = "[CMD=VAL]: DONE";
 			parseDataStream(windowBuffer, &nSamples, labelsBuffer);
-			// predict();
+			if (nSamples == 0) {
+				sendMessage("[IO]: TIMEOUT OR MALFORMED");
+				long currentTimeout = Serial.getTimeout();
+				Serial.print("[INFO]: Current Serial Timeout (ms): ");
+				Serial.println(currentTimeout);
+			} else {
+				sendMessage("[VALIDATION]: START");
+				Serial.println("<result>");
+				size_t i = 0;
+				while (nSamples--) {
+					updateReservoir(windowBuffer[i++]);
+					uint8_t prediction = predict();
+					sendPrediction(prediction, mode);
+				}
+				Serial.println("</result>");
+				sendMessage("[VALIDATION]: DONE");
+			}
 			break;
 	}
 	sendMessage(msg);
 }
-

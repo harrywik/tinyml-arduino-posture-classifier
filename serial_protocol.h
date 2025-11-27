@@ -30,19 +30,16 @@ void initSerial();
 SerialCommandType readSerialCommand();
 
 // Set all windows with their features and labels
-bool parseDataStream(FeatureVector (&windowBuffer)[WINDOW_SIZE], uint16_t* nSamples, uint8_t (&labelsBuffer)[WINDOW_SIZE]);
+void parseDataStream(FeatureVector (&windowBuffer)[WINDOW_SIZE], uint16_t* nSamples, uint8_t (&labelsBuffer)[WINDOW_SIZE]);
 
 // Parse a single Window
 bool parseWindow(FeatureVector& featureWindow, uint8_t* label, char* dataBuffer, size_t bufferSize);
 
-// Send a training loss update
-void sendTrainLoss(float loss);
-
-// Send a validation loss update
-void sendValLoss(float loss);
+// Send features to external storage
+void transmitCollectedWindow(FeatureVector (&window)[WINDOW_SIZE]);
 
 // Send prediction result
-void sendPrediction(uint8_t label);
+void sendPrediction(uint8_t label, OperationMode mode);
 
 // Send acknowledgement or generic message
 void sendMessage(const String& msg);

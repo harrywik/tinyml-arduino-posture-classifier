@@ -98,3 +98,12 @@ FeatureVector computeFeatures() {
     return fv;
 }
 
+void collectWindow(FeatureVector (&window)[WINDOW_SIZE]) {
+	size_t wi = 0;
+	while (wi < WINDOW_SIZE) {
+	    updateIMU(); 
+	    if (bufferFilled && sampleIndex == 0) {
+		window[wi++] = computeFeatures();
+	    }
+	}
+}

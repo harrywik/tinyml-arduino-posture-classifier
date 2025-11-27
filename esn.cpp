@@ -6,6 +6,9 @@ static ESN esn;
 
 // Initialize the ESN
 void initESN() {
+    // Seed for reproducability
+    srand(42); 
+
     // Zero reservoir state
     for (uint8_t i = 0; i < RESERVOIR_SIZE; i++) {
         esn.reservoir[i] = 0.0f;
