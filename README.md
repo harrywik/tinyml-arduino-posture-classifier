@@ -25,7 +25,7 @@ engine.cpp/.h // operation mode controller
 |---INFERENCE: 
 |        |---**?infer.cpp/.h // an inference pipeline that automatically detects input data, loads the trained model to predict**
 
-**? ui.cpp/.h: // set operation mode, either serial or ble**
+**? io.cpp/.h: // set operation mode, either serial or ble**
 |       |---serial_protocol.cpp/.h // serial communication
 |       |---**? ble.cpp/h // enable BLE communication between devices**
 
