@@ -2,8 +2,7 @@
 
 enum CommunicationMode {
 	USB,
-	BLE,
-	NOT_INITIATED
+	BLE
 };
 	
 void initButton(void);
