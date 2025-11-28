@@ -24,35 +24,49 @@ def stream_data(
     send = "TRAIN" if mode == "train" else "VALIDATE"
     short = "TRAIN" if mode == "train" else "VAL"
 
-    epoch = 0
+    batch = 0
 
     try:
-        print(f"Sending [CMD={short}]")
-        send_line(ser, send)
         with open(csv_file, newline='\n') as csvfile:
+            n_rows = sum(1 for line in csvfile)
+            csvfile.seek(0) # reset after counting lines
             reader = csv.reader(csvfile, delimiter=',')
             y_true = []
+
+            # Send command
+            print(f"Sending [CMD={short}]")
+            send_line(ser, send)
+
             for i, row in enumerate(reader):
                 if i == 0:
                     # Headers
+                    print(row)
                     continue
+
                 # Send it over
                 y_true.append(row[-1])
                 send_line(ser, ",".join(row))
+
                 # Wait a bit
                 time.sleep(0.01)
 
+                if i == n_rows - 1:
+                    # All rows parsed
+                    parse_predictions(Path(write_file), ser, y_true)
+                    batch += 1
+                    print(f"Batch {batch} has been processed. Ctrl+C to terminate")
+                    print("DONE")
+                    return 
+
                 # Window is full
                 # Get predictions
-                if i % winlen == 0:
+                if i % winlen == 1 and i != 1:
                     parse_predictions(Path(write_file), ser, y_true)
-                    epoch += 1
-                    print(f"Epoch {epoch} has elapsed. Ctrl+C to terminate")
-                    if i == reader.line_num - 1:
-                        print("DONE")
-                        return 
-
+                    batch += 1
+                    print(f"Batch {batch} has been processed. Ctrl+C to terminate")
                     print(f"Sending [CMD={short}]")
+                    # Reset y_true before collecting more
+                    y_true = [] 
                     send_line(ser, send)
     finally:
         ser.close()

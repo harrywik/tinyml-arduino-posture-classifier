@@ -18,11 +18,11 @@ def append_or_create_csv(file_path: Path, header: str, data_rows: list):
 
     if not file_exists:
         print(f"File '{file_path}' not found. Creating and writing header.")
-        with file_path.open('w', newline='', encoding='utf-8') as f:
+        with file_path.open('w', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(header)
 
-    with file_path.open('a', newline='', encoding='utf-8') as f:
+    with file_path.open('a', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerows(data_rows)
 
@@ -50,6 +50,7 @@ def parse_predictions(outfile: Path, serial, y_true: list[int] | None = None):
             else:
                 continue
         e = 0
+        print(line)
 
         option: str
         if line == "<result>":
@@ -73,6 +74,7 @@ def parse_predictions(outfile: Path, serial, y_true: list[int] | None = None):
 
         if y_true:
             rows.append([option, label, y_true[i]])
+            i += 1
         else:
             rows.append([option, label])
 
