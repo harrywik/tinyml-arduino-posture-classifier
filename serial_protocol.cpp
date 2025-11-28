@@ -77,6 +77,8 @@ void parseDataStream(FeatureVector (&windowBuffer)[WINDOW_SIZE], uint16_t* nSamp
         if (parseWindow(windowBuffer[*nSamples], &labelsBuffer[*nSamples], dataBuffer, BUFFER_SIZE)) {
             (*nSamples)++;
         } else {
+	    // Reset on failure
+	    *nSamples = 0;
 	    return;
         }
     }
@@ -96,6 +98,8 @@ bool parseWindow(FeatureVector& featureWindow, uint8_t* label, char* dataBuffer,
         return false;
     }
     dataBuffer[bytesRead] = '\0'; // Null-terminate the string
+    Serial.print("Parsing: ");
+    Serial.println(dataBuffer);
 
     // Tokenize the string using ',' as the delimiter
     char* token;

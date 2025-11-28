@@ -9,7 +9,7 @@ def send_line(ser, line, sleep=True):
     if sleep:
         time.sleep(SLEEP_BETWEEN_CMD)
 
-def read_line(ser):
+def read_line(ser) -> str | None:
     if ser.in_waiting:
         return ser.readline().decode().strip()
 
