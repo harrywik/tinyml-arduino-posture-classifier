@@ -1,9 +1,20 @@
 #include <Arduino.h>
+#include <Wire.h>
 #include "button.h"
 
 const long LONG_PRESS_THRESHOLD_MS = 10000; // 10 seconds (10 000 ms)
-const long DEBOUNCE_MS = 500; // Minimum time (500ms) that counts
-const uint8_t LARGE_BUTTON = 4;
+const long DEBOUNCE_MS = 100; // Minimum time (100ms) that counts
+const uint32_t LARGE_BUTTON = 13;
+
+void nrf_gpio_cfg_out_with_input(uint32_t pin_number) {
+  nrf_gpio_cfg(
+    pin_number,
+    NRF_GPIO_PIN_DIR_OUTPUT,
+    NRF_GPIO_PIN_INPUT_CONNECT,
+    NRF_GPIO_PIN_PULLUP,
+    NRF_GPIO_PIN_S0S1,
+    NRF_GPIO_PIN_NOSENSE);
+}
 
 // init button
 void initButton(void) {
@@ -17,7 +28,9 @@ void initButton(void) {
 	digitalWrite(LEDG, HIGH);
 	digitalWrite(LEDB, HIGH); 
 
-	pinMode(LARGE_BUTTON, INPUT_PULLUP);
+	pinMode(LARGE_BUTTON, OUTPUT);
+  	digitalWrite(LARGE_BUTTON, HIGH);
+  	nrf_gpio_cfg_out_with_input(digitalPinToPinName(LARGE_BUTTON));
 }
 
 /*
@@ -35,7 +48,7 @@ CommunicationMode getCommunicationMode(void) {
     
     // Outer loop repeats until a valid mode is returned
     while (true) { 
-        int buttonState = digitalRead(LARGE_BUTTON);
+        int buttonState = nrf_gpio_pin_read(digitalPinToPinName(LARGE_BUTTON));
 
         // START of a press: Button goes LOW and we haven't started tracking yet
         if (buttonState == LOW && !buttonPressed) {
