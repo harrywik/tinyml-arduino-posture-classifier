@@ -20,7 +20,10 @@ void runIteration(CommunicationMode mode) {
 
 	// Button press after startup
 	if (interrupt && !buttonPressIgnore()) {
-
+		// Perform action
+		persistOutputWeights();
+		// Communicate
+		communicatePersistance();
 	}
 	// Handled so reset
 	interrupt = false;

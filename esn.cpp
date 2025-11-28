@@ -29,6 +29,11 @@ void initESN() {
         }
     }
 
+    if (getKVPersistedWeights(esn.W_out))
+	// We got a succesfull retrieval
+	return;
+
+    // Or not...
     // Zero output weights (trainable)
     for (uint8_t i = 0; i < OUTPUT_SIZE; i++) {
         for (uint8_t j = 0; j < RESERVOIR_SIZE; j++) {
@@ -37,16 +42,10 @@ void initESN() {
     }
 }
 
-void loadOutputWeights(void) {
-	// TODO:
-	// log any errors
-	getEEPROM(esn.W_out);
-}
-
 void persistOutputWeights(void) {
 	// TODO:
 	// log any errors
-	setEEPROM(esn.W_out);
+	setKVPersistedWeights(esn.W_out);
 }
 
 // Update the reservoir state with a new feature vector

@@ -15,7 +15,11 @@ struct ESN {
 };
 
 void initESN();
+
 void updateReservoir(const FeatureVector& fv);
+
 void trainOutputLayer(const FeatureVector* X, const uint8_t* y, uint16_t n_samples, float learning_rate = 0.01);
+
 uint8_t predict();
 
+void persistOutputWeights(void);

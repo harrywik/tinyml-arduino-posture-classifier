@@ -123,3 +123,14 @@ void communicateBLEMode(void) {
 	// LOW is ON
 	digitalWrite(LEDB, LOW);
 }
+
+void communicatePersistance(void) {
+	// Turn off all colors (HIGH is OFF)
+	digitalWrite(LEDR, HIGH); 
+	digitalWrite(LEDG, HIGH);
+	digitalWrite(LEDB, HIGH); 
+
+	// Communicate it is now safe to unplug
+	// Weights are shared
+	digitalWrite(LEDG, LOW);
+}

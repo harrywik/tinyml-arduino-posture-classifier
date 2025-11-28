@@ -6,5 +6,5 @@
 #define KV_R_WRITE_ERROR        -10 // Write failure
 
 // Simple get/set
-bool getEEPROM(float W_out[OUTPUT_SIZE][RESERVOIR_SIZE]);
-bool setEEPROM(float W_out[OUTPUT_SIZE][RESERVOIR_SIZE]);
+bool getKVPersistedWeights(float W_out[OUTPUT_SIZE][RESERVOIR_SIZE]);
+bool setKVPersistedWeights(float W_out[OUTPUT_SIZE][RESERVOIR_SIZE]);
