@@ -52,6 +52,8 @@ void runIteration(void) {
 					uint8_t prediction = predict();
 					sendPrediction(prediction, mode);
 				}
+				// important otherwise it would be MAX uint16_t
+				nSamples = 0;
 				Serial.println("</result>");
 				sendMessage("[TRAIN]: DONE");
 			}

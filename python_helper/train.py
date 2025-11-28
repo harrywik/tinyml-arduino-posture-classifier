@@ -40,7 +40,6 @@ def stream_data(
             for i, row in enumerate(reader):
                 if i == 0:
                     # Headers
-                    print(row)
                     continue
 
                 # Send it over
@@ -49,14 +48,6 @@ def stream_data(
 
                 # Wait a bit
                 time.sleep(0.01)
-
-                if i == n_rows - 1:
-                    # All rows parsed
-                    parse_predictions(Path(write_file), ser, y_true)
-                    batch += 1
-                    print(f"Batch {batch} has been processed. Ctrl+C to terminate")
-                    print("DONE")
-                    return 
 
                 # Window is full
                 # Get predictions
@@ -68,6 +59,12 @@ def stream_data(
                     # Reset y_true before collecting more
                     y_true = [] 
                     send_line(ser, send)
+
+            # Process the final one
+            parse_predictions(Path(write_file), ser, y_true)
+            batch += 1
+            print(f"Batch {batch} has been processed.")
+            print("DONE")
     finally:
         ser.close()
         print("\nSerial connection closed.")
