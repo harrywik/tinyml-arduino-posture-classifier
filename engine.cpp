@@ -1,6 +1,8 @@
-#include "engine.h"
-#include "imu_features.h"
 #include "esn.h"
+#include "engine.h"
+#include "button.h"
+#include "persist_weights.h"
+#include "imu_features.h"
 #include "serial_protocol.h"
 
 OperationMode mode = IDLE;
@@ -8,8 +10,28 @@ FeatureVector windowBuffer[WINDOW_SIZE];
 uint8_t labelsBuffer[WINDOW_SIZE];
 uint16_t nSamples = 0;
 
+volatile bool interrupt = false;
+
+void buttonHandler(void) {
+	interrupt = true;
+}
+
 void runIteration(CommunicationMode mode) {
-	if (mode == BLE) return;
+
+	// Button press after startup
+	if (interrupt && !buttonPressIgnore()) {
+
+	}
+	// Handled so reset
+	interrupt = false;
+
+
+	// TODO:
+	// implement BLE
+	// wrap all calls to Serial with an IO-class instead
+	// caller agnostic to whether BLE or USB
+	// is the chosen communication mode
+	if (mode == BLE) return; // for now return early
 
 	SerialCommandType order = readSerialCommand();
 	switch (order) {

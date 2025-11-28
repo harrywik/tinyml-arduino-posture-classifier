@@ -1,4 +1,5 @@
 #include "esn.h"
+#include "persist_weights.h"
 #include <math.h>
 #include <stdlib.h>  // for rand()
 
@@ -34,6 +35,18 @@ void initESN() {
             esn.W_out[i][j] = 0.0f;
         }
     }
+}
+
+void loadOutputWeights(void) {
+	// TODO:
+	// log any errors
+	getEEPROM(esn.W_out);
+}
+
+void persistOutputWeights(void) {
+	// TODO:
+	// log any errors
+	setEEPROM(esn.W_out);
 }
 
 // Update the reservoir state with a new feature vector

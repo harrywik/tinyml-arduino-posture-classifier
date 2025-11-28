@@ -19,8 +19,13 @@ void setup() {
       // Short press
       initSerial();
 
+    // Sensor
     initIMU();
+    // ML-model
     initESN();
+
+    // Button interrupt handler
+    onButtonPress(buttonHandler);
 }
 
 void loop() {

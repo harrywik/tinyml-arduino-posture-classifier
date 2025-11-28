@@ -55,6 +55,12 @@ SerialCommandType readSerialCommand() {
 bool getLabel(uint8_t (&labelBuffer)[WINDOW_SIZE], uint16_t nSamples) {
 	char dataBuffer[2];
 	Serial.print("Label: ");
+	
+	// Wait for label OR timeout (5s)
+	unsigned long start = millis();
+	while (Serial.available() == 0 && (millis() - start) < 5000) {
+    		;
+  	}
 	int bytesRead = Serial.readBytesUntil('\n', dataBuffer, 1);
 	if (bytesRead == 0) {
 		// No good data

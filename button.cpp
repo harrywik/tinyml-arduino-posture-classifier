@@ -4,7 +4,6 @@
 
 const long LONG_PRESS_THRESHOLD_MS = 10000; // 10 seconds (10 000 ms)
 const long DEBOUNCE_MS = 100; // Minimum time (100ms) that counts
-const uint32_t LARGE_BUTTON = 13;
 
 void nrf_gpio_cfg_out_with_input(uint32_t pin_number) {
   nrf_gpio_cfg(
@@ -31,6 +30,29 @@ void initButton(void) {
 	pinMode(LARGE_BUTTON, OUTPUT);
   	digitalWrite(LARGE_BUTTON, HIGH);
   	nrf_gpio_cfg_out_with_input(digitalPinToPinName(LARGE_BUTTON));
+
+}
+
+void onButtonPress(CallbackFunction cb) {
+	attachInterrupt(digitalPinToInterrupt(LARGE_BUTTON), cb, CHANGE);
+}
+
+// Used to see if the interrupt should lead to action
+bool buttonPressIgnore(void) {
+	size_t buttonState;
+	long start = millis();
+	while (true) {
+        	buttonState = nrf_gpio_pin_read(digitalPinToPinName(LARGE_BUTTON));
+		if (buttonState == LOW) {
+			if ((millis() - start) > 2000) {
+				// Long enough => ACT
+				return false;
+			}
+		} else {
+			// Accident => we can ignore it
+			return true;
+		}
+	}
 }
 
 /*

@@ -1,11 +1,9 @@
 #pragma once
 #include "button.h"
 
+void buttonHandler(void);
+
 void runIteration(CommunicationMode mode);
-
-void handleBLECommands(void);
-
-void handleUSBCommands(void);
 
 enum OperationMode {
 	IDLE,
