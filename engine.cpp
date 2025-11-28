@@ -8,10 +8,11 @@ FeatureVector windowBuffer[WINDOW_SIZE];
 uint8_t labelsBuffer[WINDOW_SIZE];
 uint16_t nSamples = 0;
 
-void runIteration(void) {
+void runIteration(CommunicationMode mode) {
+	if (mode == BLE) return;
 
-	SerialCommandType cmd = readSerialCommand();
-	switch (cmd) {
+	SerialCommandType order = readSerialCommand();
+	switch (order) {
 		case CMD_NONE:
 			return;
 		case CMD_COLLECT: {
