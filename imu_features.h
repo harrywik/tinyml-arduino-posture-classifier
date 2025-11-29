@@ -27,3 +27,5 @@ void updateEMA(FeatureVector (&windowBuffer)[WINDOW_SIZE], uint16_t nSamples);
 
 // Normalize the collected window
 void normalizeWindow(FeatureVector (&windowBuffer)[WINDOW_SIZE], uint16_t nSamples);
+
+void persistEMA(void);

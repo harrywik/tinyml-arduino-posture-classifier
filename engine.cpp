@@ -1,7 +1,6 @@
 #include "esn.h"
 #include "engine.h"
 #include "button.h"
-#include "persist_weights.h"
 #include "imu_features.h"
 #include "serial_protocol.h"
 
@@ -22,6 +21,7 @@ void runIteration(CommunicationMode mode) {
 	if (interrupt && !buttonPressIgnore()) {
 		// Perform action
 		persistOutputWeights();
+		persistEMA();
 		// Communicate
 		communicatePersistance();
 	}

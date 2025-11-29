@@ -44,7 +44,7 @@ bool buttonPressIgnore(void) {
 	while (true) {
         	buttonState = nrf_gpio_pin_read(digitalPinToPinName(LARGE_BUTTON));
 		if (buttonState == LOW) {
-			if ((millis() - start) > 2000) {
+			if ((millis() - start) > 3000) {
 				// Long enough => ACT
 				return false;
 			}

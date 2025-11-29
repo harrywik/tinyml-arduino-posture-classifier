@@ -1,5 +1,5 @@
 #include "esn.h"
-#include "persist_weights.h"
+#include "persistance.h"
 #include <math.h>
 #include <stdlib.h>  // for rand()
 
@@ -28,6 +28,9 @@ void initESN() {
             esn.W_res[i][j] = ((float)rand() / RAND_MAX) - 0.5f;
         }
     }
+    
+    // TODO:
+    // Log if we have errors in KVStore
 
     if (getKVPersistedWeights(esn.W_out))
 	// We got a succesfull retrieval

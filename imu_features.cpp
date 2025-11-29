@@ -1,4 +1,5 @@
 #include "imu_features.h"
+#include "persistance.h"
 #include <math.h>
 
 static float accelX[WINDOW_SIZE];
@@ -16,10 +17,12 @@ static bool bufferFilled = false;
 
 // Initialize IMU sensor
 bool initIMU() {
-    if (!IMU.begin()) {
-        return false;
-    }
-    return true;
+    	if (!IMU.begin()) {
+        	return false;
+    	}
+	// Load EMAs if available
+    	getKVPersistedEMA(EMAs);
+    	return true;
 }
 
 
@@ -120,6 +123,10 @@ void updateEMA(FeatureVector (&windowBuffer)[WINDOW_SIZE], uint16_t nSamples) {
 		mu /= nSamples;
 		EMAs[fi] = EMA_ALPHA * EMAs[fi] + (1 - EMA_ALPHA) * mu;
 	}
+}
+
+void persistEMA(void) {
+    	setKVPersistedEMA(EMAs);
 }
 
 void normalizeWindow(FeatureVector (&windowBuffer)[WINDOW_SIZE], uint16_t nSamples) {
