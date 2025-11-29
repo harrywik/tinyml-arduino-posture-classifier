@@ -3,9 +3,10 @@
 #include "button.h"
 #include "persist_weights.h"
 #include "imu_features.h"
-#include "serial_protocol.h"
+// #include "serial_protocol.h"
+#include "io.h"
 
-OperationMode mode = IDLE;
+// OperationMode mode = IDLE;
 FeatureVector windowBuffer[WINDOW_SIZE];
 uint8_t labelsBuffer[WINDOW_SIZE];
 uint16_t nSamples = 0;
@@ -16,7 +17,7 @@ void buttonHandler(void) {
 	interrupt = true;
 }
 
-void runIteration(CommunicationMode mode) {
+void runIteration() {
 
 	// Button press after startup
 	if (interrupt && !buttonPressIgnore()) {
@@ -34,38 +35,39 @@ void runIteration(CommunicationMode mode) {
 	// wrap all calls to Serial with an IO-class instead
 	// caller agnostic to whether BLE or USB
 	// is the chosen communication mode
-	if (mode == BLE) return; // for now return early
+	// if (mode == BLE) return; // for now return early
 
-	SerialCommandType order = readSerialCommand();
+	// SerialCommandType order = readSerialCommand();
+	SerialCommandType order = Coms.receive();
 	switch (order) {
 		case CMD_NONE:
 			return;
 		case CMD_COLLECT: {
-			Serial.println("[CMD=COLLECT]: INIT");
+			Coms.send("[CMD=COLLECT]: INIT");
 			// This will set nSamples
 			collectWindow(windowBuffer, &nSamples);
-			Serial.println("[CMD=COLLECT]: COLLECTED");
+			Coms.send("[CMD=COLLECT]: COLLECTED");
 			// This will set equally many labels
-			if (!getLabel(labelsBuffer, nSamples)) {
-				Serial.println("Bad input");
+			if (!Coms.getLabel(labelsBuffer, nSamples)) {
+				Coms.send("Bad input");
 				nSamples = 0;
 			}
 			break;
 		}
 		case CMD_TRAIN: {
-			Serial.println("[CMD=TRAIN]: INIT");
-			Serial.println("[CMD=TRAIN]: UPDATE EMA");
+			Coms.send("[CMD=TRAIN]: INIT");
+			Coms.send("[CMD=TRAIN]: UPDATE EMA");
 			updateEMA(windowBuffer, nSamples);
-			Serial.println("[CMD=TRAIN]: NORMALIZATION");
+			Coms.send("[CMD=TRAIN]: NORMALIZATION");
 			normalizeWindow(windowBuffer, nSamples);
-			Serial.println("[CMD=TRAIN]: GRADIENT DESCENT");
+			Coms.send("[CMD=TRAIN]: GRADIENT DESCENT");
 			trainOutputLayer(windowBuffer, labelsBuffer, nSamples, 0.01f);
 			size_t i = 0;
-			Serial.println("[CMD=TRAIN]: PRINTING PREDICTIONS:");
+			Coms.send("[CMD=TRAIN]: PRINTING PREDICTIONS:");
 			while (nSamples--) {
 				updateReservoir(windowBuffer[i++]);
 				uint8_t prediction = predict();
-				Serial.println(prediction);
+				Coms.send(String(prediction));
 			}
 			nSamples = 0;
 			break;
@@ -76,7 +78,7 @@ void runIteration(CommunicationMode mode) {
 			while (nSamples--) {
 				updateReservoir(windowBuffer[i++]);
 				uint8_t prediction = predict();
-				Serial.println(prediction);
+				Coms.send(String(prediction));
 			}
 			nSamples = 0;
 			break;
@@ -88,12 +90,13 @@ void runIteration(CommunicationMode mode) {
 			while (nSamples--) {
 				updateReservoir(windowBuffer[i++]);
 				uint8_t prediction = predict();
-				Serial.println(prediction);
+				Coms.send(String(prediction));
 			}
 			nSamples = 0;
 			break;
 		}
 		case CMD_STOP:
 			break;
+		// TODO: case CMD_SHARE_WEIGHTS:
 	}
 }

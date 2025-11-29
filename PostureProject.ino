@@ -4,20 +4,26 @@
 #include "button.h"
 #include "imu_features.h"
 #include "serial_protocol.h"
+#include "io.h"
 
 CommunicationMode coms;
+
+extern IO Coms;
 
 void setup() {
     initButton();
 
     // Wait for button press
     coms = getCommunicationMode();
-    if (coms == BLE)
-      // Long press
-      initBLE();
-    else
-      // Short press
-      initSerial();
+    Coms.begin();
+
+    Coms.setBackend(coms);
+    // if (coms == BLE)
+    //   // Long press
+    //   initBLE();
+    // else
+    //   // Short press
+    //   initSerial();
 
     // Sensor
     initIMU();
@@ -29,6 +35,6 @@ void setup() {
 }
 
 void loop() {
-  runIteration(coms);
+  runIteration();
 }
 

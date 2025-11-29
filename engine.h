@@ -3,13 +3,13 @@
 
 void buttonHandler(void);
 
-void runIteration(CommunicationMode mode);
+void runIteration();
 
-enum OperationMode {
-	IDLE,
-	COLLECTION,
-	TRAINING,
-	VALIDATION,
-	WEIGHT_SHARING,
-	INFERENCE
-};
+// enum OperationMode {
+// 	IDLE,
+// 	COLLECTION,
+// 	TRAINING,
+// 	VALIDATION,
+// 	WEIGHT_SHARING,
+// 	INFERENCE
+// };
