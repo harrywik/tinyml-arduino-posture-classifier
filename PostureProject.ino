@@ -8,8 +8,14 @@
 CommunicationMode coms;
 
 void setup() {
+    // Needed for the button interrupts
+    __enable_irq();
+    // Button init first as this decides com mode
     initButton();
+    // Button interrupt handler
+    onButtonPress(buttonHandler); // Important to have before
 
+    // What is blow which is polling
     // Wait for button press
     coms = getCommunicationMode();
     if (coms == BLE)
@@ -23,9 +29,6 @@ void setup() {
     initIMU();
     // ML-model
     initESN();
-
-    // Button interrupt handler
-    onButtonPress(buttonHandler);
 }
 
 void loop() {

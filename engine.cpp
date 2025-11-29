@@ -17,17 +17,27 @@ void buttonHandler(void) {
 
 void runIteration(CommunicationMode mode) {
 
+	bool flag = false;
+
+    	// Disable interrupts while reading/clearing the shared variable
+    	__disable_irq();
+    	if (interrupt) {
+        	flag = true;
+        	interrupt = false;
+    	}
+    	__enable_irq();
+	
+	if (flag)
+		Serial.println("triggered");
+	//
 	// Button press after startup
-	if (interrupt && !buttonPressIgnore()) {
+	if (flag && !buttonPressIgnore()) {
 		// Perform action
 		persistOutputWeights();
 		persistEMA();
 		// Communicate
 		communicatePersistance();
 	}
-	// Handled so reset
-	interrupt = false;
-
 
 	// TODO:
 	// implement BLE
