@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include "button.h"
+#include "led.h"
 
 const long LONG_PRESS_THRESHOLD_MS = 10000; // 10 seconds (10 000 ms)
 const long DEBOUNCE_MS = 100; // Minimum time (100ms) that counts
@@ -17,42 +18,10 @@ void nrf_gpio_cfg_out_with_input(uint32_t pin_number) {
 
 // init button
 void initButton(void) {
-	// Use LED to communicate mode
-	pinMode(LEDR, OUTPUT);
-	pinMode(LEDG, OUTPUT);
-	pinMode(LEDB, OUTPUT);
-
-	// Turn off all colors initially (HIGH is OFF)
-	digitalWrite(LEDR, HIGH); 
-	digitalWrite(LEDG, HIGH);
-	digitalWrite(LEDB, HIGH); 
-
 	pinMode(LARGE_BUTTON, OUTPUT);
   	digitalWrite(LARGE_BUTTON, HIGH);
   	nrf_gpio_cfg_out_with_input(digitalPinToPinName(LARGE_BUTTON));
 
-}
-
-void onButtonPress(CallbackFunction cb) {
-	attachInterrupt(digitalPinToInterrupt(LARGE_BUTTON), cb, CHANGE);
-}
-
-// Used to see if the interrupt should lead to action
-bool buttonPressIgnore(void) {
-	size_t buttonState;
-	long start = millis();
-	while (true) {
-        	buttonState = nrf_gpio_pin_read(digitalPinToPinName(LARGE_BUTTON));
-		if (buttonState == LOW) {
-			if ((millis() - start) > 2000) {
-				// Long enough => ACT
-				return false;
-			}
-		} else {
-			// Accident => we can ignore it
-			return true;
-		}
-	}
 }
 
 /*
@@ -110,27 +79,4 @@ CommunicationMode getCommunicationMode(void) {
 
         delay(5); // Stability
     }
-}
-
-void communicateUSBMode(void) {
-	// Red is USB
-	// LOW is ON
-	digitalWrite(LEDR, LOW);
-}
-
-void communicateBLEMode(void) {
-	// Blue is BLE
-	// LOW is ON
-	digitalWrite(LEDB, LOW);
-}
-
-void communicatePersistance(void) {
-	// Turn off all colors (HIGH is OFF)
-	digitalWrite(LEDR, HIGH); 
-	digitalWrite(LEDG, HIGH);
-	digitalWrite(LEDB, HIGH); 
-
-	// Communicate it is now safe to unplug
-	// Weights are shared
-	digitalWrite(LEDG, LOW);
 }

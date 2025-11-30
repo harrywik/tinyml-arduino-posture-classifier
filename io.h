@@ -1,6 +1,5 @@
 #pragma once
 #include <Arduino.h> 
-#include <stddef.h> // for size_t
 #include "button.h"
 
 enum SerialCommandType {
@@ -10,6 +9,7 @@ enum SerialCommandType {
     CMD_VAL,
     CMD_INFER,
     CMD_STOP,
+    CMD_PERSIST,
     CMD_SHARE_WEIGHTS
 };
 
@@ -20,21 +20,14 @@ enum IOBackend {
 
 class IO {
 public:
-    // initialize
-    void begin(); 
-    
     // auto-detect available backend within timeout
     void setBackend(CommunicationMode mode); 
-    
     // send string message
     void send(const String& msg);
-    
     // receive command
     SerialCommandType receive();
-    
     // request label input
     bool getLabel(uint8_t* labelBuffer, uint16_t nSamples);
-
     // model weight exchange, for federated learning
     bool sendModel(float* weights, size_t len);
     bool receiveModel(float* weights, size_t len);

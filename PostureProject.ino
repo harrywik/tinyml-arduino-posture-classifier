@@ -12,26 +12,15 @@ extern IO Coms;
 
 void setup() {
     initButton();
-
     // Wait for button press
     coms = getCommunicationMode();
-    Coms.begin();
-
+    // This handles initialization
+    // of the correct IO device
     Coms.setBackend(coms);
-    // if (coms == BLE)
-    //   // Long press
-    //   initBLE();
-    // else
-    //   // Short press
-    //   initSerial();
-
     // Sensor
     initIMU();
     // ML-model
     initESN();
-
-    // Button interrupt handler
-    onButtonPress(buttonHandler);
 }
 
 void loop() {

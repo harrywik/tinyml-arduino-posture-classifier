@@ -15,17 +15,13 @@ IO Coms;
 void IO::setBackend(CommunicationMode mode) {
 if (mode == BLE) {
         currentBackend = IO_BLE;
+    	initBLE();   
         communicateBLEMode(); // blue LED
     } else { // USB
         currentBackend = IO_SERIAL;
+    	initSerial(); 
         communicateUSBMode(); // red LED
     }
-}
-
-void IO::begin() {
-    // intitialize both backends
-    initSerial(); 
-    initBLE();   
 }
 
 void IO::send(const String& msg){
