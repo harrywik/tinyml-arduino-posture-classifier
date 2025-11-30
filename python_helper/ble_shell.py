@@ -1,5 +1,6 @@
 import asyncio
 import sys
+import argparse
 from bleak import BleakClient, BleakScanner
 from bleak.exc import BleakError
 from bleak.backends.device import BLEDevice
@@ -175,9 +176,23 @@ async def scan_and_connect():
 
 
 if __name__ == "__main__":
-    # Removed the placeholder check as we are now using dynamic discovery
+    parser = argparse.ArgumentParser(description="BLE Terminal Client for Arduino.")
+    parser.add_argument(
+        '--address', 
+        type=str, 
+        help="The known MAC address of the BLE peripheral (e.g., AA:BB:CC:DD:EE:FF). Skips scanning if provided.",
+        default=None
+    )
+    args = parser.parse_args()
+
     try:
-        asyncio.run(scan_and_connect())
+        if args.address:
+            # If address is provided, skip scanning and connect directly
+            print(f"MAC address provided: {args.address}. Attempting direct connection...")
+            asyncio.run(connect_and_interact(args.address))
+        else:
+            # Otherwise, run the full scan and discovery process
+            asyncio.run(scan_and_connect())
     except KeyboardInterrupt:
         print("\n[INFO] User interrupted the program.")
     except Exception as e:
