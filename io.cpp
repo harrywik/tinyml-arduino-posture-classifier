@@ -42,7 +42,7 @@ SerialCommandType IO::receive() {
         if (BLEReceive(rawCommand)) {
             // BLE mode received a command
             return parseSerialCommand(rawCommand);
-        }
+        } 
     }
     return CMD_NONE;
 }

@@ -2,22 +2,20 @@
 #include "ble.h"
 
 BLEService customService(BLE_SLAVE_UUID);
-// BLECharacteristic(uuid, properties, value_size)
-uint8_t permissions = BLERead | BLEWrite;
-// TODO:
-// calculate the max amount of data transmitted
-uint8_t maxNumerOfBytes = 1; // This is just a test...
-BLECharacteristic sensorCharacteristic(BLE_SLAVE_UUID, permissions, 1);
+uint8_t permissions = BLERead | BLEWrite | BLENotify;
+BLECharacteristic sensorCharacteristic(BLE_CHARACTERISTIC_UUID, permissions, 20);
 
 
 bool initBLE(void) {
+	if (!BLE.begin())
+		return false;
 	BLE.setAdvertisedService(customService);
 
-	String name = "ArduinoBLE-";
+	String name = "id";
 
 	// Make unique
 	String uuidString = String(BLE_SLAVE_UUID);
-	name += uuidString.substring(0, 8);
+	name += uuidString.substring(0, 4);
 	
 	// Set name
 	BLE.setLocalName(name.c_str()); 
@@ -39,9 +37,13 @@ bool initBLE(void) {
 	return true;
 }
 
-bool isBLEConnected() {
+bool isBLEConnected(void) {
 	BLEDevice central = BLE.central();
 	return central && central.connected();
+}
+
+void readvertiseBLE(void) {
+	BLE.advertise();
 }
 
 void BLESend(const String& msg) {
@@ -52,7 +54,10 @@ void BLESend(const String& msg) {
 
 bool BLEReceive(String &cmd) {
     BLEDevice central = BLE.central();
-    if (!central) return false;
+    if (!central) {
+	readvertiseBLE();
+	return false;
+    }
 
     if (sensorCharacteristic.written()) {
         cmd = String((char*)sensorCharacteristic.value(), sensorCharacteristic.valueLength());  
