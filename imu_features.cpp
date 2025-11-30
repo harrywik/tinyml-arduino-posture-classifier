@@ -1,4 +1,5 @@
 #include "imu_features.h"
+#include "persistance.h"
 #include <math.h>
 
 static float accelX[WINDOW_SIZE];
@@ -9,16 +10,21 @@ static float gyroX[WINDOW_SIZE];
 static float gyroY[WINDOW_SIZE];
 static float gyroZ[WINDOW_SIZE];
 
+static float EMAs[NUM_FEATURES] = {0.0};
+
 static uint8_t sampleIndex = 0;
 static bool bufferFilled = false;
 
 // Initialize IMU sensor
 bool initIMU() {
-    if (!IMU.begin()) {
-        return false;
-    }
-    return true;
+    	if (!IMU.begin()) {
+        	return false;
+    	}
+	// Load EMAs if available
+    	getKVPersistedEMA(EMAs);
+    	return true;
 }
+
 
 // Add new sample to the circular buffer
 void updateIMU() {
@@ -98,12 +104,35 @@ FeatureVector computeFeatures() {
     return fv;
 }
 
-void collectWindow(FeatureVector (&window)[WINDOW_SIZE]) {
-	size_t wi = 0;
-	while (wi < WINDOW_SIZE) {
+void collectWindow(FeatureVector (&window)[WINDOW_SIZE], uint16_t *nSamples) {
+	*nSamples = 0;
+	while (*nSamples < WINDOW_SIZE) {
 	    updateIMU(); 
 	    if (bufferFilled && sampleIndex == 0) {
-		window[wi++] = computeFeatures();
+		window[(*nSamples)++] = computeFeatures();
 	    }
+	}
+}
+
+void updateEMA(FeatureVector (&windowBuffer)[WINDOW_SIZE], uint16_t nSamples) {
+	for (size_t fi = 0; fi < NUM_FEATURES; fi++) {
+		float mu = 0;
+		for (size_t wi = 0; wi < nSamples; wi++) {
+			mu += windowBuffer[wi].features[fi];
+		}
+		mu /= nSamples;
+		EMAs[fi] = EMA_ALPHA * EMAs[fi] + (1 - EMA_ALPHA) * mu;
+	}
+}
+
+void persistEMA(void) {
+    	setKVPersistedEMA(EMAs);
+}
+
+void normalizeWindow(FeatureVector (&windowBuffer)[WINDOW_SIZE], uint16_t nSamples) {
+	for (size_t wi = 0; wi < nSamples; wi++) {
+		for (size_t fi = 0; fi < NUM_FEATURES; fi++) {
+			windowBuffer[wi].features[fi] -= EMAs[fi];
+		}
 	}
 }

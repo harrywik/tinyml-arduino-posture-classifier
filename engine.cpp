@@ -1,89 +1,87 @@
-#include "engine.h"
-#include "imu_features.h"
+#include "io.h"
+#include "led.h"
 #include "esn.h"
-#include "serial_protocol.h"
+#include "engine.h"
+#include "button.h"
+#include "imu_features.h"
 
-OperationMode mode = IDLE;
 FeatureVector windowBuffer[WINDOW_SIZE];
 uint8_t labelsBuffer[WINDOW_SIZE];
 uint16_t nSamples = 0;
 
-void runIteration(void) {
-	SerialCommandType order = readSerialCommand();
-	String msg;
+void runIteration() {
+	SerialCommandType order = Coms.receive();
+
 	switch (order) {
 		case CMD_NONE:
-			// Return early no message or action (default)
 			return;
-		case CMD_STOP:
+		case CMD_COLLECT: {
+			Coms.send("[CMD=COLLECT]: INIT");
+			// This will set nSamples
+			collectWindow(windowBuffer, &nSamples);
+			Coms.send("[CMD=COLLECT]: COLLECTED");
+			// This will set equally many labels
+			if (!Coms.getLabel(labelsBuffer, nSamples)) {
+				Coms.send("Bad input");
+				nSamples = 0;
+			}
+			break;
+		}
+		case CMD_TRAIN: {
+			Coms.send("[CMD=TRAIN]: INIT");
+			Coms.send("[CMD=TRAIN]: UPDATE EMA");
+			updateEMA(windowBuffer, nSamples);
+			Coms.send("[CMD=TRAIN]: NORMALIZATION");
+			normalizeWindow(windowBuffer, nSamples);
+			Coms.send("[CMD=TRAIN]: GRADIENT DESCENT");
+			trainOutputLayer(windowBuffer, labelsBuffer, nSamples, 0.01f);
+			size_t i = 0;
+			Coms.send("[CMD=TRAIN]: PRINTING PREDICTIONS:");
+			while (nSamples--) {
+				updateReservoir(windowBuffer[i++]);
+				uint8_t prediction = predict();
+				Coms.send(String(prediction));
+			}
 			nSamples = 0;
-			mode = IDLE;
-			sendMessage("[CMD=STOP]: RECEIVED");
-			// Defer done message
-			msg = "[CMD=STOP]: DONE";
 			break;
-		case CMD_COLLECT:
-			mode = COLLECTION;
-			sendMessage("[CMD=COLLECT]: RECEIVED");
-			// Defer done message
-			msg = "[CMD=COLLECT]: DONE";
-			collectWindow(windowBuffer);
-			transmitCollectedWindow(windowBuffer);
-			break;
-		case CMD_TRAIN:
-			mode = TRAINING;
-			sendMessage("[CMD=TRAIN]: RECEIVED") ;
-			// Defer done message
-			msg = "[CMD=TRAIN]: DONE";
-			sendMessage("[IO]: STREAM");
-			parseDataStream(windowBuffer, &nSamples, labelsBuffer);
-			if (nSamples == 0) {
-				sendMessage("[IO]: TIMEOUT OR MALFORMED");
-				long currentTimeout = Serial.getTimeout();
-				Serial.print("Current Serial Timeout (ms): ");
-				Serial.println(currentTimeout);
-			} else {
-				sendMessage("[TRAIN]: START");
-            			trainOutputLayer(windowBuffer, labelsBuffer, nSamples, 0.01f);
-				Serial.println("<result>");
-				size_t i = 0;
-				while (nSamples--) {
-					updateReservoir(windowBuffer[i++]);
-					uint8_t prediction = predict();
-					sendPrediction(prediction, mode);
-				}
-				// important otherwise it would be MAX uint16_t
-				nSamples = 0;
-				Serial.println("</result>");
-				sendMessage("[TRAIN]: DONE");
+		}
+		case CMD_VAL: {
+			normalizeWindow(windowBuffer, nSamples);
+			size_t i = 0;
+			while (nSamples--) {
+				updateReservoir(windowBuffer[i++]);
+				uint8_t prediction = predict();
+				Coms.send(String(prediction));
 			}
-		     	break;
-		case CMD_VAL:
-		     	mode = VALIDATION;
-			sendMessage("[CMD=VAL]: RECEIVED");
-			// Defer done message
-			msg = "[CMD=VAL]: DONE";
-			parseDataStream(windowBuffer, &nSamples, labelsBuffer);
-			if (nSamples == 0) {
-				sendMessage("[IO]: TIMEOUT OR MALFORMED");
-				long currentTimeout = Serial.getTimeout();
-				Serial.print("[INFO]: Current Serial Timeout (ms): ");
-				Serial.println(currentTimeout);
-			} else {
-				sendMessage("[VALIDATION]: START");
-				Serial.println("<result>");
-				size_t i = 0;
-				while (nSamples--) {
-					updateReservoir(windowBuffer[i++]);
-					uint8_t prediction = predict();
-					sendPrediction(prediction, mode);
-				}
-				// important otherwise it would be MAX uint16_t
-				nSamples = 0;
-				Serial.println("</result>");
-				sendMessage("[VALIDATION]: DONE");
-			}
+			nSamples = 0;
 			break;
+		}
+		case CMD_INFER: {
+			collectWindow(windowBuffer, &nSamples);
+			normalizeWindow(windowBuffer, nSamples);
+			size_t i = 0;
+			while (nSamples--) {
+				updateReservoir(windowBuffer[i++]);
+				uint8_t prediction = predict();
+				Coms.send(String(prediction));
+			}
+			nSamples = 0;
+			break;
+		}
+		case CMD_STOP:
+			break;
+		case CMD_SHARE_WEIGHTS:
+			// TODO: case CMD_SHARE_WEIGHTS:
+			break;
+		case CMD_PERSIST: {
+			Coms.send("[CMD=PERSIST]: INIT");
+			persistOutputWeights();
+			Coms.send("[CMD=PERSIST]: WEIGHTS PERSISTED");
+			persistEMA();
+			Coms.send("[CMD=PERSIST]: EMAs PERSISTED");
+			communicatePersistance();
+			Coms.send("[CMD=PERSIST]: DONE");
+			break;
+		}
 	}
-	sendMessage(msg);
 }

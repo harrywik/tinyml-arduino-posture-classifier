@@ -1,4 +1,5 @@
 #include "esn.h"
+#include "persistance.h"
 #include <math.h>
 #include <stdlib.h>  // for rand()
 
@@ -27,13 +28,27 @@ void initESN() {
             esn.W_res[i][j] = ((float)rand() / RAND_MAX) - 0.5f;
         }
     }
+    
+    // TODO:
+    // Log if we have errors in KVStore
 
+    if (getKVPersistedWeights(esn.W_out))
+	// We got a succesfull retrieval
+	return;
+
+    // Or not...
     // Zero output weights (trainable)
     for (uint8_t i = 0; i < OUTPUT_SIZE; i++) {
         for (uint8_t j = 0; j < RESERVOIR_SIZE; j++) {
             esn.W_out[i][j] = 0.0f;
         }
     }
+}
+
+void persistOutputWeights(void) {
+	// TODO:
+	// log any errors
+	setKVPersistedWeights(esn.W_out);
 }
 
 // Update the reservoir state with a new feature vector
