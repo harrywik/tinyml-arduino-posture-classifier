@@ -1,4 +1,5 @@
 #include "io.h"
+#include "led.h"
 #include "esn.h"
 #include "engine.h"
 #include "button.h"
@@ -69,7 +70,18 @@ void runIteration() {
 		}
 		case CMD_STOP:
 			break;
-		// TODO: case CMD_SHARE_WEIGHTS:
-		// TODO: case PERSIST_WEIGHTS:
+		case CMD_SHARE_WEIGHTS:
+			// TODO: case CMD_SHARE_WEIGHTS:
+			break;
+		case CMD_PERSIST: {
+			Coms.send("[CMD=PERSIST]: INIT");
+			persistOutputWeights();
+			Coms.send("[CMD=PERSIST]: WEIGHTS PERSISTED");
+			persistEMA();
+			Coms.send("[CMD=PERSIST]: EMAs PERSISTED");
+			communicatePersistance();
+			Coms.send("[CMD=PERSIST]: DONE");
+			break;
+		}
 	}
 }
