@@ -2,20 +2,22 @@
 
 ## Features
 
--[x] Sample from the IMU's gyro and acc in x,y,z
--[x] Normalize input features via an exponential moving average
--[x] Receive labels from user over USB or BLE
--[x] Train or validate on collected data
--[x] Infer labels based on reservoir state and output layer weights
--[x] Persist weights and EMA values using MbedOS KVStore
--[ ] Share and aggregate output layer weights between boards
+- [x] Sample from the IMU's gyro and acc in x,y,z
+- [x] Normalize input features via an exponential moving average
+- [x] Receive labels from user over USB or BLE
+- [x] Train or validate on collected data
+- [x] Infer labels based on reservoir state and output layer weights
+- [x] Persist weights and EMA values using MbedOS KVStore
+- [ ] Share and aggregate output layer weights between boards
 
 ## How to use
 
 Please note that the code has only been tested for this fully qualified board: `--fqbn arduino:mbed_nano:nano33ble`.
 With library versions: 
-    - `ArduinoBLE@1.4.1`
-    - `Arduino_LSM9DS1@1.1.1`
+
+- `ArduinoBLE@1.4.1`
+- `Arduino_LSM9DS1@1.1.1`
+
 and platform `arduino:mbed_nano@4.4.1`
 
 Update and upgrade core:
