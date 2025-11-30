@@ -36,4 +36,58 @@ bool initBLE(void) {
 
   	// --- Start Advertising ---
   	BLE.advertise();
+	return true;
+}
+
+bool isBLEConnected() {
+	BLEDevice central = BLE.central();
+	return central && central.connected();
+}
+
+void BLESend(const String& msg) {
+	if (!isBLEConnected()) return;
+	// For simplicity, we assume the message fits in one characteristic write
+	sensorCharacteristic.writeValue((const uint8_t*) msg.c_str(), msg.length());
+}
+
+bool BLEReceive(String &cmd) {
+    BLEDevice central = BLE.central();
+    if (!central) return false;
+
+    if (sensorCharacteristic.written()) {
+        cmd = String((char*)sensorCharacteristic.value(), sensorCharacteristic.valueLength());  
+        return true;
+    }
+    return false;
+}
+
+bool BLESendModel(float* weights, size_t len) {
+    const uint8_t* ptr = (uint8_t*)weights;
+    size_t bytes = len * sizeof(float);
+
+    while (bytes > 0) {
+        size_t chunk = min(bytes, 20);
+        sensorCharacteristic.writeValue(ptr, chunk);
+        delay(10);
+
+        ptr += chunk;
+        bytes -= chunk;
+    }
+
+    return true;
+}
+
+bool BLEReceiveModel(float* weights, size_t len) {
+    uint8_t* ptr = (uint8_t*)weights;
+    size_t bytes = len * sizeof(float);
+    size_t received = 0;
+
+    while(received < bytes) {
+        if(sensorCharacteristic.written()) {
+            int chunk = sensorCharacteristic.valueLength();
+            memcpy(ptr + received, sensorCharacteristic.value(), chunk);
+            received += chunk;
+        }
+    }
+    return true;
 }
