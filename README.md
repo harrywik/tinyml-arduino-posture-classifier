@@ -10,7 +10,7 @@
 - [x] Persist weights and EMA values using MbedOS KVStore
 - [ ] Share and aggregate output layer weights between boards
 
-## How to use
+## Installation
 
 Please note that the code has only been tested for this fully qualified board: `--fqbn arduino:mbed_nano:nano33ble`.
 With library versions: 
@@ -56,6 +56,36 @@ Upload binaries:
 arduino-cli upload -p /dev/ttyACM0 --fqbn arduino:mbed_nano:nano33ble . --verbose
 ```
 
+## Usage
+
+Choose between the following communication modes:
+
+- USB (short press)
+- BLE (long press)
+
+If you choose USB:
+
+```bash
+arduino-cli monitor -p /dev/ttyACM0
+```
+
+Continue with a short press on the large on board button wired to pin 13.
+
+If you opted for BLE:
+
+```bash
+cd python_helper
+uv run ble_shell.py
+```
+
+This will guide you through the initial connection process.
+Take note of the MAC that works and next time use:
+
+```bash
+uv run ble_shell.py --address <mac>
+```
+
+As this will not have to scan all available BLE devices.
 
 
 ### File structure
