@@ -11,7 +11,9 @@
 // W_out
 bool getKVPersistedWeights(float W_out[OUTPUT_SIZE][RESERVOIR_SIZE]);
 bool setKVPersistedWeights(float W_out[OUTPUT_SIZE][RESERVOIR_SIZE]);
+bool rmKVpersistedWeights(void);
 
 // EMAs
 bool getKVPersistedEMA(float EMAs[NUM_FEATURES]);
 bool setKVPersistedEMA(float EMAs[NUM_FEATURES]);
+bool rmKVpersistedEMA(void);

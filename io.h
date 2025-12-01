@@ -8,7 +8,7 @@ enum SerialCommandType {
     CMD_TRAIN,
     CMD_VAL,
     CMD_INFER,
-    CMD_STOP,
+    CMD_RESET,
     CMD_PERSIST,
     CMD_SHARE_WEIGHTS
 };

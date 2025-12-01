@@ -68,8 +68,9 @@ void runIteration() {
 			nSamples = 0;
 			break;
 		}
-		case CMD_STOP:
+		case CMD_RESET: {
 			break;
+		}
 		case CMD_SHARE_WEIGHTS:
 			// TODO: case CMD_SHARE_WEIGHTS:
 			break;

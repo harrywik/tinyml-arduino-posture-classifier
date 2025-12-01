@@ -44,8 +44,8 @@ SerialCommandType parseSerialCommand(String& line) {
         return CMD_VAL;
     } else if (line == "INFER") {
         return CMD_INFER;
-    } else if (line == "STOP") {
-        return CMD_STOP;
+    } else if (line == "RESET") {
+        return CMD_RESET;
     } else if (line == "PERSIST") {
         return CMD_PERSIST;
     } else if (line == "SHARE") {

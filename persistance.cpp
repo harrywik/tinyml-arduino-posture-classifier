@@ -31,6 +31,10 @@ bool getKVPersistedWeights(float W_out[OUTPUT_SIZE][RESERVOIR_SIZE]) {
         return false;
 }
 
+bool rmKVpersistedWeights(void) {
+	return kv_remove(W_OUT_KEY) == KV_R_OK;
+}
+
 // Similarily for EMAs
 bool setKVPersistedEMA(float EMAs[NUM_FEATURES]) {
     	size_t ret = kv_set(EMA_KEY, (const uint8_t*) EMAs, EMA_BYTES, 0);
@@ -44,7 +48,11 @@ bool getKVPersistedEMA(float EMAs[NUM_FEATURES]) {
 	size_t actual_size;
     	size_t ret = kv_get(EMA_KEY, (uint8_t*) EMAs, EMA_BYTES, &actual_size);
 
-    	if (ret == KV_R_OK && actual_size == W_OUT_BYTES)
+    	if (ret == KV_R_OK && actual_size == EMA_BYTES)
         	return true;
         return false;
+}
+
+bool rmKVpersistedEMA(void) {
+	return kv_remove(EMA_KEY) == KV_R_OK;
 }
