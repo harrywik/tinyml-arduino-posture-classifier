@@ -3,6 +3,7 @@
 #include "esn.h"
 #include "engine.h"
 #include "button.h"
+#include "persistance.h"
 #include "imu_features.h"
 
 FeatureVector windowBuffer[WINDOW_SIZE];
@@ -69,6 +70,13 @@ void runIteration() {
 			break;
 		}
 		case CMD_RESET: {
+			Coms.send("[CMD=RESET]: INIT");
+			if (rmKVpersistedEMA()) {
+				Coms.send("[CMD=RESET]: REMOVED EMA");
+			}
+			if (rmKVpersistedWeights()) {
+				Coms.send("[CMD=RESET]: REMOVED W_out");
+			}
 			break;
 		}
 		case CMD_SHARE_WEIGHTS:
