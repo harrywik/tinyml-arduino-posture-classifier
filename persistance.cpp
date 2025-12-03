@@ -1,4 +1,5 @@
-V#include <string.h>
+#include <math.h>
+#include <string.h>
 #include <format.h>
 #include "KVStore.h"
 #include "kvstore_global_api.h"
@@ -69,4 +70,72 @@ bool KVappendCollected(
 	n_total++;
 	ret = kv_set(N_TOTAL, (const uint8_t*) &n_total, SIZEOF_N_TOTAL, 0);
 	return ret == KV_R_OK;
+}
+
+bool get_n_total(uint16_t* n) {
+	uint16_t n_total;
+	size_t actual_size;
+    	size_t ret = kv_get(N_TOTAL, (uint8_t*) &n_total, SIZEOF_N_TOTAL, &actual_size);
+
+	if (ret != KV_R_OK || actual_size != SIZEOF_N_TOTAL) {
+		return false;
+	}
+	*n = n_total;
+	return true;
+}
+
+bool calcNormalizationParams(
+    float AVGs[NUM_FEATURES], 
+    float VARs[NUM_FEATURES], 
+    const std::vector<size_t>& train_idxs // Pass by const reference
+) {
+    // We calculate N_TOTAL once here
+    const size_t N_TOTAL = train_idxs.size() * WINDOW_SIZE;
+
+    // Check for division by zero
+    if (N_TOTAL == 0) {
+        // Handle case where training set is empty
+        return true; 
+    }
+
+    float featVec[WINDOW_SIZE];
+    size_t actual_size;
+    int ret;
+
+    // Loop over each feature to calculate its mean and variance independently
+    for (size_t j = 0; j < NUM_FEATURES; j++) {
+        // Must be initialized OUTSIDE the sample loop to accumulate globally
+        double global_sum = 0.0;
+        double global_sum_sq = 0.0;
+        
+        // Loop over each training sample index
+        for (size_t i : train_idxs) {
+            
+            std::string featureKey = std::format("d{}f{}", i, j);
+            
+            ret = kv_get(featureKey.c_str(), (uint8_t*) featVec, sizeof(featVec), &actual_size);
+            
+            if (ret != KV_R_OK || actual_size != sizeof(featVec))
+                return false;
+
+            for (size_t k = 0; k < WINDOW_SIZE; k++) {
+                global_sum += featVec[k];
+                global_sum_sq += featVec[k] * featVec[k];
+            }
+        }
+        
+        // Global Mean (mu)
+        float mu = static_cast<float>(global_sum / N_TOTAL);
+        
+        float E_X_sq = static_cast<float>(global_sum_sq / N_TOTAL);
+        float sigma_sq = E_X_sq - (mu * mu);
+
+        // Ensure variance is non-negative due to floating-point error
+        if (sigma_sq < 0.0f) sigma_sq = 0.0f;
+
+        AVGs[j] = mu;
+        VARs[j] = sigma_sq; 
+    }
+
+    return true;
 }

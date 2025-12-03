@@ -13,7 +13,11 @@ bool getKVPersistedWeights(float W_out[OUTPUT_SIZE][RESERVOIR_SIZE]);
 bool setKVPersistedWeights(float W_out[OUTPUT_SIZE][RESERVOIR_SIZE]);
 bool rmKVpersistedWeights(void);
 
-// EMAs
-bool getKVPersistedEMA(float EMAs[NUM_FEATURES]);
-bool setKVPersistedEMA(float EMAs[NUM_FEATURES]);
-bool rmKVpersistedEMA(void);
+// For the collected data
+bool KVappendCollected(
+	FeatureVector windowBuffer[WINDOW_SIZE], 
+	uint8_t labelsBuffer[WINDOW_SIZE]
+);
+
+// get number of Windows persisted
+bool get_n_total(uint16_t* n);

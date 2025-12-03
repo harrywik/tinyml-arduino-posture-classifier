@@ -10,7 +10,8 @@ static float gyroX[WINDOW_SIZE];
 static float gyroY[WINDOW_SIZE];
 static float gyroZ[WINDOW_SIZE];
 
-static float EMAs[NUM_FEATURES] = {0.0};
+static float AVGs[NUM_FEATURES] = {0.0};
+static float VARs[NUM_FEATURES] = {0.0};
 
 static uint8_t sampleIndex = 0;
 static bool bufferFilled = false;
@@ -20,8 +21,6 @@ bool initIMU() {
     	if (!IMU.begin()) {
         	return false;
     	}
-	// Load EMAs if available
-    	getKVPersistedEMA(EMAs);
     	return true;
 }
 
@@ -114,10 +113,14 @@ void collectWindow(FeatureVector (&window)[WINDOW_SIZE], uint16_t *nSamples) {
 	}
 }
 
+bool initNormalization(const std::vector<size_t>& train_idxs) {
+	return calcNormalizationParams(AVGs, VARs, train_idxs)
+}
+
 void normalizeWindow(FeatureVector (&windowBuffer)[WINDOW_SIZE], uint16_t nSamples) {
 	for (size_t wi = 0; wi < nSamples; wi++) {
 		for (size_t fi = 0; fi < NUM_FEATURES; fi++) {
-			windowBuffer[wi].features[fi] -= EMAs[fi];
+			windowBuffer[wi].features[fi] = (windowBuffer[wi].features[fi] - AVGs[fi]) / VARs[fi];
 		}
 	}
 }
