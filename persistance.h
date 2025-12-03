@@ -1,6 +1,7 @@
 #pragma once
 #include <math.h>
 #include <string>
+#include <cstring>
 #include <sstream>
 #include <vector>
 #include "esn.h"
@@ -15,7 +16,7 @@
 // W_out
 bool getKVPersistedWeights(float W_out[OUTPUT_SIZE][RESERVOIR_SIZE]);
 bool setKVPersistedWeights(float W_out[OUTPUT_SIZE][RESERVOIR_SIZE]);
-bool rmKVpersistedWeights(void);
+bool resetKV(void);
 
 // For the collected data
 bool KVappendCollected(

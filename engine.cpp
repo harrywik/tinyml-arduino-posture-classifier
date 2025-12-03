@@ -119,7 +119,7 @@ void runIteration() {
 				Coms.send("[CMD=RESET]: REMOVED EMA");
 			}
 			*/
-			if (rmKVpersistedWeights()) {
+			if (resetKV()) {
 				Coms.send("[CMD=RESET]: REMOVED W_out");
 			}
 			break;

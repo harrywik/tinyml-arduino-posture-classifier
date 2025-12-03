@@ -1,5 +1,6 @@
 #include "KVStore.h"
 #include "kvstore_global_api.h"
+#include "io.h"
 #include "esn.h"
 #include "persistance.h"
 
@@ -30,8 +31,56 @@ bool getKVPersistedWeights(float W_out[OUTPUT_SIZE][RESERVOIR_SIZE]) {
         return false;
 }
 
-bool rmKVpersistedWeights(void) {
-	return kv_remove(W_OUT_KEY) == KV_R_OK;
+bool resetKV(void) {
+    uint16_t n_total;
+    size_t actual_size;
+    size_t ret;
+    
+    // 1. --- Retrieve the total count ---
+    // Read the counter to know the upper limit of the collected data indices (0 to n_total - 1)
+    ret = kv_get(N_TOTAL, (uint8_t*) &n_total, SIZEOF_N_TOTAL, &actual_size);
+
+    // If the count key isn't found, assume n_total is 0 and proceed (it means the store is already empty of collected data)
+    if (ret != KV_R_OK || actual_size != SIZEOF_N_TOTAL) {
+        n_total = 0;
+    }
+    
+    bool overall_success = true;
+
+    // 2. --- Delete all Label and Feature Keys ---
+    for (uint16_t i = 0; i < n_total; i++) {
+        // A. Delete Label Key (l{i})
+        std::stringstream ss_label;
+        ss_label << "l" << i;
+        std::string labelKey = ss_label.str();
+        
+        // We delete it regardless of whether it's found (delete often returns a success code 
+        // even if the key is not present, but we must check for permanent errors)
+        ret = kv_reset(labelKey.c_str());
+        if (ret != KV_R_OK && ret != KV_R_NO_KEY) { // Check for a critical error
+            overall_success = false;
+        }
+
+        // B. Delete all Feature Keys for this index (d{i}f{j})
+        for (size_t j = 0; j < NUM_FEATURES; j++) {
+            std::stringstream ss_feature;
+            ss_feature << "d" << i << "f" << j;
+            std::string featureKey = ss_feature.str();
+
+            ret = kv_reset(featureKey.c_str());
+            if (ret != KV_R_OK && ret != KV_R_NO_KEY) { // Check for a critical error
+                overall_success = false;
+            }
+        }
+    }
+
+    // 3. --- Delete the persistent counter key itself ---
+    ret = kv_reset(N_TOTAL);
+    if (ret != KV_R_OK && ret != KV_R_NO_KEY) {
+        overall_success = false;
+    }
+
+    return overall_success;
 }
 
 bool getCollectedWindow(
@@ -83,6 +132,7 @@ bool KVappendCollected(
 	if (ret != KV_R_OK || actual_size != SIZEOF_N_TOTAL) {
 		// Not previously stored
 		n_total = 0;
+		Coms.send("1st false setting n_total to 0");
 	}
 
 	std::stringstream ss;
@@ -92,8 +142,10 @@ bool KVappendCollected(
 	// Set label 
 	// All labelsBuffer elements should contain the same value
 	ret = kv_set(labelKey.c_str(), &labelsBuffer[0], 1, 0);
-	if (ret != KV_R_OK)
+	if (ret != KV_R_OK) {
+		Coms.send("2nd false");
 		return false;
+	}
 
 	float featVec[WINDOW_SIZE];
 	for (size_t j = 0; j < NUM_FEATURES; j++) {
@@ -105,8 +157,10 @@ bool KVappendCollected(
 		std::string featureKey = ss.str();
 
 		ret = kv_set(featureKey.c_str(), (const uint8_t*) featVec, sizeof(featVec), 0);
-		if (ret != KV_R_OK)
+		if (ret != KV_R_OK) {
+			Coms.send("3rd false");
 			return false;
+		}
 	}
 
 	n_total++;
