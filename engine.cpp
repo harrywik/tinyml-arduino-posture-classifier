@@ -30,8 +30,8 @@ void runIteration() {
 		}
 		case CMD_TRAIN: {
 			Coms.send("[CMD=TRAIN]: INIT");
-			Coms.send("[CMD=TRAIN]: UPDATE EMA");
-			updateEMA(windowBuffer, nSamples);
+			// Coms.send("[CMD=TRAIN]: UPDATE EMA");
+			// updateEMA(windowBuffer, nSamples);
 			Coms.send("[CMD=TRAIN]: NORMALIZATION");
 			normalizeWindow(windowBuffer, nSamples);
 			Coms.send("[CMD=TRAIN]: GRADIENT DESCENT");
@@ -47,7 +47,7 @@ void runIteration() {
 			break;
 		}
 		case CMD_VAL: {
-			normalizeWindow(windowBuffer, nSamples);
+			// normalizeWindow(windowBuffer, nSamples);
 			size_t i = 0;
 			while (nSamples--) {
 				updateReservoir(windowBuffer[i++]);
