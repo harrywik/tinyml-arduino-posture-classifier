@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 #include <Arduino.h>
 #include <Arduino_LSM9DS1.h> // IMU library for Nano 33 BLE Sense
 
@@ -21,5 +22,9 @@ FeatureVector computeFeatures();
 // Collect a window to later be sent to storage
 void collectWindow(FeatureVector (&window)[WINDOW_SIZE], uint16_t *nSamples);
 
+// Init normalization mean and variance
+bool initNormalization(const std::vector<uint16_t>& train_idxs);
+
 // Normalize the collected window
 void normalizeWindow(FeatureVector (&windowBuffer)[WINDOW_SIZE], uint16_t nSamples);
+

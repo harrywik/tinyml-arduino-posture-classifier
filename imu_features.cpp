@@ -114,14 +114,14 @@ void collectWindow(FeatureVector (&window)[WINDOW_SIZE], uint16_t *nSamples) {
 	}
 }
 
-bool initNormalization(const std::vector<size_t>& train_idxs) {
+bool initNormalization(const std::vector<uint16_t>& train_idxs) {
 	return calcNormalizationParams(AVGs, VARs, train_idxs);
 }
 
 void normalizeWindow(FeatureVector (&windowBuffer)[WINDOW_SIZE], uint16_t nSamples) {
 	for (size_t wi = 0; wi < nSamples; wi++) {
 		for (size_t fi = 0; fi < NUM_FEATURES; fi++) {
-			windowBuffer[wi].features[fi] = (windowBuffer[wi].features[fi] - AVGs[fi]) / VARs[fi];
+			windowBuffer[wi].features[fi] = (windowBuffer[wi].features[fi] - AVGs[fi]) / sqrt(VARs[fi]);
 		}
 	}
 }

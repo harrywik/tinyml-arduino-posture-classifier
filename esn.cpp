@@ -1,4 +1,5 @@
 #include "esn.h"
+#include "engine.h"
 #include "persistance.h"
 #include <math.h>
 #include <stdlib.h>  // for rand()
@@ -8,7 +9,7 @@ static ESN esn;
 // Initialize the ESN
 void initESN() {
     // Seed for reproducability
-    srand(42); 
+    srand(SEED); 
 
     // Zero reservoir state
     for (uint8_t i = 0; i < RESERVOIR_SIZE; i++) {

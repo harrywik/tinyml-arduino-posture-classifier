@@ -30,5 +30,11 @@ bool get_n_total(uint16_t* n);
 bool calcNormalizationParams(
     float AVGs[NUM_FEATURES], 
     float VARs[NUM_FEATURES], 
-    const std::vector<size_t>& train_idxs
+    const std::vector<uint16_t>& train_idxs
+);
+
+bool getCollectedWindow(
+	FeatureVector (&windowBuffer)[WINDOW_SIZE], 
+	uint8_t (&labelsBuffer)[WINDOW_SIZE],
+	uint16_t index
 );

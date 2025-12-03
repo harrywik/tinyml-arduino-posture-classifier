@@ -34,6 +34,44 @@ bool rmKVpersistedWeights(void) {
 	return kv_remove(W_OUT_KEY) == KV_R_OK;
 }
 
+bool getCollectedWindow(
+	FeatureVector (&windowBuffer)[WINDOW_SIZE], 
+	uint8_t (&labelsBuffer)[WINDOW_SIZE],
+	uint16_t index
+) {
+	std::stringstream ss;
+	ss << "l" << index;
+	std::string labelKey = ss.str();
+
+	uint8_t label;
+	size_t actual_size;
+    	size_t ret = kv_get(labelKey.c_str(), (uint8_t*) &label, 1, &actual_size);
+
+	if (ret != KV_R_OK || actual_size != 1)
+		return false;
+
+	for (size_t i = 0; i < WINDOW_SIZE; i++) {
+		labelsBuffer[i] = label;
+	}
+
+
+	float featVec[WINDOW_SIZE];
+	for (size_t i = 0; i < NUM_FEATURES; i++) {
+		std::stringstream ss;
+		ss << "d" << index << "f" << i;
+		std::string dataKey = ss.str();
+		size_t expected_size = sizeof(featVec);
+		ret = kv_get(dataKey.c_str(), (uint8_t*) featVec, expected_size, &actual_size);
+
+		if (ret != KV_R_OK || actual_size != expected_size)
+            		return false;
+		for (size_t j = 0; j < WINDOW_SIZE; j++) {
+			    windowBuffer[j].features[i] = featVec[j];
+		}
+        }
+	return true;
+}
+
 bool KVappendCollected(
 	FeatureVector windowBuffer[WINDOW_SIZE], 
 	uint8_t labelsBuffer[WINDOW_SIZE]
@@ -91,7 +129,7 @@ bool get_n_total(uint16_t* n) {
 bool calcNormalizationParams(
     float AVGs[NUM_FEATURES], 
     float VARs[NUM_FEATURES], 
-    const std::vector<size_t>& train_idxs // Pass by const reference
+    const std::vector<uint16_t>& train_idxs // Pass by const reference
 ) {
     // We calculate N_TOTAL once here
     const size_t N_TOTAL = train_idxs.size() * WINDOW_SIZE;
