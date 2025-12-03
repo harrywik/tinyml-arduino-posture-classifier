@@ -3,7 +3,7 @@
 #include "button.h"
 #include "led.h"
 
-const long LONG_PRESS_THRESHOLD_MS = 10000; // 10 seconds (10 000 ms)
+const long LONG_PRESS_THRESHOLD_MS = 5000; // 5 seconds (5 000 ms)
 const long DEBOUNCE_MS = 100; // Minimum time (100ms) that counts
 
 void nrf_gpio_cfg_out_with_input(uint32_t pin_number) {

@@ -65,40 +65,41 @@ bool IO::getLabel(uint8_t* labelBuffer, uint16_t nSamples) {
         dataBuffer[bytesRead] = '\0';
         uint8_t label = (uint8_t) atol(dataBuffer); 
         
+	// Range check
+	if (label >= NUM_FEATURES)
+		return false;
         for (size_t i = 0; i < nSamples; i++) {
             labelBuffer[i] = label;
         }
         return true;
     } else if (currentBackend == IO_BLE) {
         // send request for label
-        BLESend("[REQUEST]: Label"); 
+        BLESend("Label: "); 
         
         String labelCommand;
         unsigned long start = millis();
         const unsigned long timeoutMs = 5000; // timeout for label input
+	bool received = false;
 
         // wait for label command or timeout
-        while ((millis() - start) < timeoutMs) {
-            if (BLEReceive(labelCommand)) {
-                // check if it's a label command
-                if (labelCommand.startsWith("Label:")) {
-                    // parse label value
-                    String valueStr = labelCommand.substring(6); 
-                    uint8_t label = (uint8_t) valueStr.toInt();
-
-                    // fill label buffer
-                    for (uint16_t i = 0; i < nSamples; i++) {
-                        labelBuffer[i] = label;
-                    }
-                    BLESend("[Label]: RECEIVED");
-                    return true;
-                }
-            }
-            delay(10); 
+        while ((millis() - start) < timeoutMs && !received) {
+		if (BLEReceive(labelCommand))
+			received = true;
+            	delay(10); 
         }
+	if (received) {
+		uint8_t label = (uint8_t) atol(labelCommand.c_str()); 
+		// Range check
+		if (label >= NUM_FEATURES)
+			return false;
+		for (size_t i = 0; i < nSamples; i++) {
+		    labelBuffer[i] = label;
+		}
+		return true;
+	}
 
         // timeout
-        send("[ERROR]: LABEL TIMEOUT");
+        BLESend("[ERROR]: LABEL TIMEOUT"); 
         return false;
     }
     
