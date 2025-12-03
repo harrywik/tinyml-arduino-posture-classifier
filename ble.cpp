@@ -3,7 +3,7 @@
 
 BLEService customService(BLE_SLAVE_UUID);
 uint8_t permissions = BLERead | BLEWrite | BLENotify;
-BLECharacteristic sensorCharacteristic(BLE_CHARACTERISTIC_UUID, permissions, 20);
+BLECharacteristic sensorCharacteristic(BLE_CHARACTERISTIC_UUID, permissions, 64);
 
 
 bool initBLE(void) {
