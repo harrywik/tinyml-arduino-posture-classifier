@@ -1,4 +1,8 @@
 #pragma once
+#include <math.h>
+#include <string>
+#include <sstream>
+#include <vector>
 #include "esn.h"
 #include "imu_features.h"
 // These are the standard Mbed OS return codes for success and common errors.
@@ -19,5 +23,12 @@ bool KVappendCollected(
 	uint8_t labelsBuffer[WINDOW_SIZE]
 );
 
-// get number of Windows persisted
+// Get number of Windows persisted
 bool get_n_total(uint16_t* n);
+
+// For IMU features
+bool calcNormalizationParams(
+    float AVGs[NUM_FEATURES], 
+    float VARs[NUM_FEATURES], 
+    const std::vector<size_t>& train_idxs
+);

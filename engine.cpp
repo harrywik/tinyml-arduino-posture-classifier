@@ -71,9 +71,11 @@ void runIteration() {
 		}
 		case CMD_RESET: {
 			Coms.send("[CMD=RESET]: INIT");
+			/*
 			if (rmKVpersistedEMA()) {
 				Coms.send("[CMD=RESET]: REMOVED EMA");
 			}
+			*/
 			if (rmKVpersistedWeights()) {
 				Coms.send("[CMD=RESET]: REMOVED W_out");
 			}
@@ -86,8 +88,8 @@ void runIteration() {
 			Coms.send("[CMD=PERSIST]: INIT");
 			persistOutputWeights();
 			Coms.send("[CMD=PERSIST]: WEIGHTS PERSISTED");
-			persistEMA();
-			Coms.send("[CMD=PERSIST]: EMAs PERSISTED");
+			// persistEMA();
+			// Coms.send("[CMD=PERSIST]: EMAs PERSISTED");
 			communicatePersistance();
 			Coms.send("[CMD=PERSIST]: DONE");
 			break;

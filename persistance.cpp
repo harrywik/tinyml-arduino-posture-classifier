@@ -1,6 +1,3 @@
-#include <math.h>
-#include <string.h>
-#include <format.h>
 #include "KVStore.h"
 #include "kvstore_global_api.h"
 #include "esn.h"
@@ -49,7 +46,11 @@ bool KVappendCollected(
 		// Not previously stored
 		n_total = 0;
 	}
-	std::string labelKey = std::format("l{}", n_total);
+
+	std::stringstream ss;
+	ss << "l" << n_total;
+	std::string labelKey = ss.str();
+	
 	// Set label 
 	// All labelsBuffer elements should contain the same value
 	ret = kv_set(labelKey.c_str(), &labelsBuffer[0], 1, 0);
@@ -61,7 +62,10 @@ bool KVappendCollected(
 		for (size_t i = 0; i < WINDOW_SIZE; i++) {
 			featVec[i] = windowBuffer[i].features[j];
 		}
-		std::string featureKey = std::format("d{}f{}", n_total, j);
+		std::stringstream ss;
+		ss << "d" << n_total << "f" << j;
+		std::string featureKey = ss.str();
+
 		ret = kv_set(featureKey.c_str(), (const uint8_t*) featVec, sizeof(featVec), 0);
 		if (ret != KV_R_OK)
 			return false;
@@ -111,7 +115,9 @@ bool calcNormalizationParams(
         // Loop over each training sample index
         for (size_t i : train_idxs) {
             
-            std::string featureKey = std::format("d{}f{}", i, j);
+	    std::stringstream ss;
+	    ss << "d" << i << "f" << j;
+	    std::string featureKey = ss.str();
             
             ret = kv_get(featureKey.c_str(), (uint8_t*) featVec, sizeof(featVec), &actual_size);
             

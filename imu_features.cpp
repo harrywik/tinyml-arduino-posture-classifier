@@ -1,6 +1,7 @@
 #include "imu_features.h"
 #include "persistance.h"
 #include <math.h>
+#include <vector>
 
 static float accelX[WINDOW_SIZE];
 static float accelY[WINDOW_SIZE];
@@ -114,7 +115,7 @@ void collectWindow(FeatureVector (&window)[WINDOW_SIZE], uint16_t *nSamples) {
 }
 
 bool initNormalization(const std::vector<size_t>& train_idxs) {
-	return calcNormalizationParams(AVGs, VARs, train_idxs)
+	return calcNormalizationParams(AVGs, VARs, train_idxs);
 }
 
 void normalizeWindow(FeatureVector (&windowBuffer)[WINDOW_SIZE], uint16_t nSamples) {
