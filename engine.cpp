@@ -5,6 +5,7 @@
 #include "button.h"
 #include "persistance.h"
 #include "imu_features.h"
+#include "eval.h"
 
 FeatureVector windowBuffer[WINDOW_SIZE];
 uint8_t labelsBuffer[WINDOW_SIZE];
@@ -49,11 +50,16 @@ void runIteration() {
 		case CMD_VAL: {
 			normalizeWindow(windowBuffer, nSamples);
 			size_t i = 0;
-			while (nSamples--) {
-				updateReservoir(windowBuffer[i++]);
-				uint8_t prediction = predict();
-				Coms.send(String(prediction));
-			}
+			//TODO:
+			// require trainWindow, validateWindow, trainLabel, validateLabel to be defined elsewhere
+			//
+			evaluateModel(windowBuffer, labelsBuffer, nSamples, true);
+			// while (nSamples--) {
+			// 	// updateReservoir(windowBuffer[i++]);
+			// 	// uint8_t prediction = predict();
+			// 	// Coms.send(String(prediction));
+				
+			// }
 			nSamples = 0;
 			break;
 		}

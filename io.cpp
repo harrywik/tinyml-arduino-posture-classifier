@@ -50,7 +50,7 @@ SerialCommandType IO::receive() {
 bool IO::getLabel(uint8_t* labelBuffer, uint16_t nSamples) {
     if (currentBackend == IO_SERIAL) {
         char dataBuffer[2];
-        Serial.print("Label: ");
+        Serial.println("Label: ");
         
         unsigned long start = millis();
         while (Serial.available() == 0 && (millis() - start) < 5000) {
@@ -99,7 +99,7 @@ bool IO::getLabel(uint8_t* labelBuffer, uint16_t nSamples) {
 	}
 
         // timeout
-        BLESend("[ERROR]: LABEL TIMEOUT"); 
+        BLESend("[ERROR]: LABEL TIMEOUT\n"); 
         return false;
     }
     
