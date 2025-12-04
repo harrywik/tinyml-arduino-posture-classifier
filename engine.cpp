@@ -48,12 +48,12 @@ void runIteration() {
 			break;
 		}
 		case CMD_VAL: {
-			normalizeWindow(windowBuffer, nSamples);
-			size_t i = 0;
+			// normalizeWindow(windowBuffer, nSamples);
+			// size_t i = 0;
 			//TODO:
 			// require trainWindow, validateWindow, trainLabel, validateLabel to be defined elsewhere
 			//
-			evaluateModel(windowBuffer, labelsBuffer, nSamples, true);
+			evaluateLoop(true);
 			// while (nSamples--) {
 			// 	// updateReservoir(windowBuffer[i++]);
 			// 	// uint8_t prediction = predict();

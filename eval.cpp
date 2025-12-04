@@ -1,9 +1,14 @@
 #include <Arduino.h>
 #include "esn.h"
+#include "imu_features.h"
 //#include "datautils.h" // assume that the data processor is defined here
 #include "io.h"
 
 uint16_t CONFUSION_MATRIX[3][3] = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
+FeatureVector testWindow[WINDOW_SIZE];
+uint8_t testLabels[WINDOW_SIZE];
+uint16_t n_samples = 0;
+uint16_t correct = 0;
 
 void resetMetrics() {
     for (int i = 0; i < 3; i++) {
@@ -11,7 +16,6 @@ void resetMetrics() {
             CONFUSION_MATRIX[i][j] = 0;
     }
 }
-
 
 void printMultiClassMetrics(uint16_t n_samples) {
     const float EPSILON = 0.000001f;
@@ -99,11 +103,8 @@ void printMultiClassMetrics(uint16_t n_samples) {
 }
 
 void evaluateModel(const FeatureVector* testWindow, const uint8_t* testLabels, \
-    uint16_t n_samples, bool printMetrics) {
-
-    uint16_t correct = 0;
-
-    resetMetrics();
+    uint16_t n_samples) {
+    
 
     for (int i = 0; i < n_samples; i++) {
         updateReservoir(testWindow[i]);
@@ -115,13 +116,44 @@ void evaluateModel(const FeatureVector* testWindow, const uint8_t* testLabels, \
             CONFUSION_MATRIX[testLabels[i]][prediction]++;
     }
 
-    float accuracy = (float)correct / n_samples * 100.0f;
+
+}
+
+void evaluateLoop(bool printMetrics) {
+
+    resetMetrics();
+    uint16_t sum = 0;
+    correct = 0;
+	n_samples = 0;
+
+    for (int i = 0; i < 3; i++) {
+        delay(1000);
+        Coms.send("\n--- Evaluation Loop ---");
+        Coms.send(String(i + 1));
+        Coms.send(" ------------------------\n");
+        Coms.send("Collect evaluation data");
+        delay(500);
+        Coms.send("Start collecting now!\n");
+        collectWindow(testWindow, &n_samples);
+		Coms.send("Data collected. Waiting for Label input...");
+        delay(1500);
+        sum += n_samples;
+        if (!Coms.getLabel(testLabels, n_samples)) {
+				Coms.send("Bad input");
+			    break;
+			}
+        normalizeWindow(testWindow, n_samples);
+        evaluateModel(testWindow, testLabels, n_samples);
+        delay(500);
+    }
+    
+    float accuracy = (float)correct / sum * 100.0f;
     Coms.send("Evaluation Accuracy: ");
     Coms.send(String(accuracy));
     Coms.send("%");
 
     // default as true: For precision, recall, F1-score and confusion matrix
     if (printMetrics) 
-        printMultiClassMetrics(n_samples);
+        printMultiClassMetrics(sum);
 
 }

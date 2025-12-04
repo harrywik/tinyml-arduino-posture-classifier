@@ -50,27 +50,34 @@ SerialCommandType IO::receive() {
 bool IO::getLabel(uint8_t* labelBuffer, uint16_t nSamples) {
     if (currentBackend == IO_SERIAL) {
         char dataBuffer[2];
-        Serial.println("Label: ");
+        while (Serial.available()) { 
+            Serial.read(); 
+        }
+        Serial.print("Label: ");
         
         unsigned long start = millis();
-        while (Serial.available() == 0 && (millis() - start) < 5000) {
+        while (Serial.available() == 0 && (millis() - start) < 8000) {
             ;
         }
        
-        int bytesRead = Serial.readBytesUntil('\n', dataBuffer, 1); 
+        int bytesRead = Serial.readBytesUntil('\n', dataBuffer, sizeof(dataBuffer) - 1); 
         
         if (bytesRead == 0) {
             return false;
         }
         dataBuffer[bytesRead] = '\0';
+        
+        while (Serial.available()) {
+            Serial.read();
+        }
         uint8_t label = (uint8_t) atol(dataBuffer); 
         
 	// Range check
-	if (label >= NUM_FEATURES)
-		return false;
-        for (size_t i = 0; i < nSamples; i++) {
-            labelBuffer[i] = label;
-        }
+        if (label >= NUM_FEATURES)
+            return false;
+            for (size_t i = 0; i < nSamples; i++) {
+                labelBuffer[i] = label;
+            }
         return true;
     } else if (currentBackend == IO_BLE) {
         // send request for label
