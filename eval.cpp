@@ -11,8 +11,8 @@ uint16_t n_samples = 0;
 uint16_t correct = 0;
 
 void resetMetrics() {
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) 
+    for (int i = 0; i < OUTPUT_SIZE; i++) {
+        for (int j = 0; j < OUTPUT_SIZE; j++) 
             CONFUSION_MATRIX[i][j] = 0;
     }
 }
@@ -24,21 +24,21 @@ void printMultiClassMetrics(uint16_t n_samples) {
 
     Coms.send("\n--- Confusion Matrix ---\n");
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < OUTPUT_SIZE; i++) {
 
         // True Positive (TP_i) = C[i][i]
         uint16_t TP_i = CONFUSION_MATRIX[i][i];
         
         // False Positive 
         uint16_t FP_i = 0;
-        for (int k = 0; k < 3; k++) {
+        for (int k = 0; k < OUTPUT_SIZE; k++) {
             if (k != i)
                 FP_i += CONFUSION_MATRIX[k][i];
         }
         
         // False Negative
         uint16_t FN_i = 0;
-        for (int k = 0; k < 3; k++) {
+        for (int k = 0; k < OUTPUT_SIZE; k++) {
             if (k != i)
                 FN_i += CONFUSION_MATRIX[i][k];
         }
@@ -126,7 +126,7 @@ void evaluateLoop(bool printMetrics) {
     correct = 0;
 	n_samples = 0;
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < OUTPUT_SIZE; i++) {
         delay(1000);
         Coms.send("\n--- Evaluation Loop ---");
         Coms.send(String(i + 1));

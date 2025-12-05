@@ -36,7 +36,7 @@ void runIteration() {
 			Coms.send("[CMD=TRAIN]: NORMALIZATION");
 			normalizeWindow(windowBuffer, nSamples);
 			Coms.send("[CMD=TRAIN]: GRADIENT DESCENT");
-			trainOutputLayer(windowBuffer, labelsBuffer, nSamples, 0.01f);
+			trainOutputLayer(windowBuffer, labelsBuffer, nSamples, LEARNING_RATE);			
 			size_t i = 0;
 			Coms.send("[CMD=TRAIN]: PRINTING PREDICTIONS:");
 			while (nSamples--) {

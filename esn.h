@@ -6,6 +6,7 @@
 #define OUTPUT_SIZE 3        // Number of classes: Sitting, Standing, Moving
 #define INPUT_SIZE NUM_FEATURES
 #define LEAKY 0.3           // Leaky integration parameter
+#define LEARNING_RATE 0.01  // Learning rate for output layer training
 
 struct ESN {
     float reservoir[RESERVOIR_SIZE];
@@ -18,7 +19,7 @@ void initESN();
 
 void updateReservoir(const FeatureVector& fv);
 
-void trainOutputLayer(const FeatureVector* X, const uint8_t* y, uint16_t n_samples, float learning_rate = 0.01);
+void trainOutputLayer(const FeatureVector* X, const uint8_t* y, uint16_t n_samples, float learning_rate = LEARNING_RATE);
 
 uint8_t predict();
 
