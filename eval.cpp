@@ -127,7 +127,6 @@ void evaluateLoop() {
     //for (int i = 0; i < OUTPUT_SIZE; i++) {
     delay(1000);
     Coms.send("\n--- Evaluation Loop ---");
-    Coms.send(String(i + 1));
     Coms.send(" ------------------------\n");
     Coms.send("Collect evaluation data");
     delay(500);
@@ -138,7 +137,7 @@ void evaluateLoop() {
     sum += n_samples;
     if (!Coms.getLabel(testLabels, n_samples)) {
 			Coms.send("Bad input");
-			break;
+			return;
 		}
     normalizeWindow(testWindow, n_samples);
     updateConfusionMatrix(testWindow, testLabels, n_samples);
