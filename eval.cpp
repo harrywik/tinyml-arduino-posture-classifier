@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include "esn.h"
 #include "imu_features.h"
-//#include "datautils.h" // assume that the data processor is defined here
 #include "io.h"
 
 uint16_t CONFUSION_MATRIX[3][3] = {0};
@@ -149,7 +148,7 @@ void evaluateLoop() {
 }
 
 void printResults() {
-    
+
     float accuracy = (float)correct / n_samples * 100.0f;
     Coms.send("Evaluation Accuracy: ");
     Coms.send(String(accuracy));

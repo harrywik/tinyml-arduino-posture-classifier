@@ -25,12 +25,17 @@ bool initIMU() {
     	return true;
 }
 
+bool IMUbufferReady(void) {
+	return bufferFilled;
+}
+
 
 // Add new sample to the circular buffer
 void updateIMU() {
     float ax, ay, az, gx, gy, gz;
 
     if (IMU.accelerationAvailable() && IMU.gyroscopeAvailable()) {
+
         IMU.readAcceleration(ax, ay, az);
         IMU.readGyroscope(gx, gy, gz);
 
@@ -104,9 +109,9 @@ FeatureVector computeFeatures() {
     return fv;
 }
 
-void collectWindow(FeatureVector (&window)[WINDOW_SIZE], uint16_t *nSamples) {
+void collectWindow(FeatureVector (&window)[BATCH_SIZE], uint16_t *nSamples) {
 	*nSamples = 0;
-	while (*nSamples < WINDOW_SIZE) {
+	while (*nSamples < BATCH_SIZE) {
 	    updateIMU(); 
 	    if (bufferFilled && sampleIndex == 0) {
 		window[(*nSamples)++] = computeFeatures();
@@ -114,11 +119,11 @@ void collectWindow(FeatureVector (&window)[WINDOW_SIZE], uint16_t *nSamples) {
 	}
 }
 
-void updateEMA(FeatureVector (&windowBuffer)[WINDOW_SIZE], uint16_t nSamples) {
+void updateEMA(FeatureVector (&featureBuffer)[BATCH_SIZE], uint16_t nSamples) {
 	for (size_t fi = 0; fi < NUM_FEATURES; fi++) {
 		float mu = 0;
 		for (size_t wi = 0; wi < nSamples; wi++) {
-			mu += windowBuffer[wi].features[fi];
+			mu += featureBuffer[wi].features[fi];
 		}
 		mu /= nSamples;
 		EMAs[fi] = EMA_ALPHA * EMAs[fi] + (1 - EMA_ALPHA) * mu;
@@ -129,10 +134,10 @@ void persistEMA(void) {
     	setKVPersistedEMA(EMAs);
 }
 
-void normalizeWindow(FeatureVector (&windowBuffer)[WINDOW_SIZE], uint16_t nSamples) {
+void normalizeWindow(FeatureVector (&featureBuffer)[BATCH_SIZE], uint16_t nSamples) {
 	for (size_t wi = 0; wi < nSamples; wi++) {
 		for (size_t fi = 0; fi < NUM_FEATURES; fi++) {
-			windowBuffer[wi].features[fi] -= EMAs[fi];
+			featureBuffer[wi].features[fi] -= EMAs[fi];
 		}
 	}
 }
