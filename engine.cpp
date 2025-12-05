@@ -53,7 +53,7 @@ void runIteration() {
 			//TODO:
 			// require trainWindow, validateWindow, trainLabel, validateLabel to be defined elsewhere
 			//
-			evaluateLoop(true);
+			evaluateLoop();
 			// while (nSamples--) {
 			// 	// updateReservoir(windowBuffer[i++]);
 			// 	// uint8_t prediction = predict();
@@ -61,6 +61,10 @@ void runIteration() {
 				
 			// }
 			nSamples = 0;
+			break;
+		}
+		case CMD_VAL_DONE:{
+			printResults();
 			break;
 		}
 		case CMD_INFER: {
@@ -77,6 +81,7 @@ void runIteration() {
 		}
 		case CMD_RESET: {
 			Coms.send("[CMD=RESET]: INIT");
+			resetMetrics();
 			if (rmKVpersistedEMA()) {
 				Coms.send("[CMD=RESET]: REMOVED EMA");
 			}

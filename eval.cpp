@@ -4,11 +4,12 @@
 //#include "datautils.h" // assume that the data processor is defined here
 #include "io.h"
 
-uint16_t CONFUSION_MATRIX[3][3] = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
+uint16_t CONFUSION_MATRIX[3][3] = {0};
 FeatureVector testWindow[WINDOW_SIZE];
 uint8_t testLabels[WINDOW_SIZE];
 uint16_t n_samples = 0;
 uint16_t correct = 0;
+uint16_t sum = 0;
 
 void resetMetrics() {
     for (int i = 0; i < OUTPUT_SIZE; i++) {
@@ -102,7 +103,7 @@ void printMultiClassMetrics(uint16_t n_samples) {
     Coms.send(" %\n");
 }
 
-void evaluateModel(const FeatureVector* testWindow, const uint8_t* testLabels, \
+void updateConfusionMatrix(const FeatureVector* testWindow, const uint8_t* testLabels, \
     uint16_t n_samples) {
     
 
@@ -119,41 +120,40 @@ void evaluateModel(const FeatureVector* testWindow, const uint8_t* testLabels, \
 
 }
 
-void evaluateLoop(bool printMetrics) {
+void evaluateLoop() {
 
-    resetMetrics();
-    uint16_t sum = 0;
-    correct = 0;
+    // resetMetrics();
 	n_samples = 0;
 
-    for (int i = 0; i < OUTPUT_SIZE; i++) {
-        delay(1000);
-        Coms.send("\n--- Evaluation Loop ---");
-        Coms.send(String(i + 1));
-        Coms.send(" ------------------------\n");
-        Coms.send("Collect evaluation data");
-        delay(500);
-        Coms.send("Start collecting now!\n");
-        collectWindow(testWindow, &n_samples);
-		Coms.send("Data collected. Waiting for Label input...");
-        delay(1500);
-        sum += n_samples;
-        if (!Coms.getLabel(testLabels, n_samples)) {
-				Coms.send("Bad input");
-			    break;
-			}
-        normalizeWindow(testWindow, n_samples);
-        evaluateModel(testWindow, testLabels, n_samples);
-        delay(500);
-    }
+    //for (int i = 0; i < OUTPUT_SIZE; i++) {
+    delay(1000);
+    Coms.send("\n--- Evaluation Loop ---");
+    Coms.send(String(i + 1));
+    Coms.send(" ------------------------\n");
+    Coms.send("Collect evaluation data");
+    delay(500);
+    Coms.send("Start collecting now!\n");
+    collectWindow(testWindow, &n_samples);
+	Coms.send("Data collected. Waiting for Label input...");
+    delay(1500);
+    sum += n_samples;
+    if (!Coms.getLabel(testLabels, n_samples)) {
+			Coms.send("Bad input");
+			break;
+		}
+    normalizeWindow(testWindow, n_samples);
+    updateConfusionMatrix(testWindow, testLabels, n_samples);
+    delay(500);
+    //}
+
+}
+
+void printResults() {
     
-    float accuracy = (float)correct / sum * 100.0f;
+    float accuracy = (float)correct / n_samples * 100.0f;
     Coms.send("Evaluation Accuracy: ");
     Coms.send(String(accuracy));
     Coms.send("%");
 
-    // default as true: For precision, recall, F1-score and confusion matrix
-    if (printMetrics) 
-        printMultiClassMetrics(sum);
-
+    printMultiClassMetrics(n_samples);
 }

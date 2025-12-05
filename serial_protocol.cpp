@@ -42,6 +42,8 @@ SerialCommandType parseSerialCommand(String& line) {
         return CMD_COLLECT;
     } else if (line == "VALIDATE") {
         return CMD_VAL;
+    } else if (line == "VALIDATE_DONE") {
+        return CMD_VAL_DONE;
     } else if (line == "INFER") {
         return CMD_INFER;
     } else if (line == "RESET") {

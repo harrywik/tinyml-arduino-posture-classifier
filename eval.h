@@ -7,6 +7,9 @@ void resetMetrics();
 
 void printMultiClassMetrics(uint16_t n_samples);
 
-void evaluateModel(const FeatureVector* testWindow, const uint8_t* testLabels,\
+void updateConfusionMatrix(const FeatureVector* testWindow, const uint8_t* testLabels,\
      uint16_t n_samples, bool printMetrics=true);
-void evaluateLoop(bool printMetrics);
+
+void evaluateLoop();
+
+void printResults() 
