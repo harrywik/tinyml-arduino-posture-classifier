@@ -4,8 +4,8 @@
 #include "io.h"
 
 uint16_t CONFUSION_MATRIX[3][3] = {0};
-FeatureVector testWindow[WINDOW_SIZE];
-uint8_t testLabels[WINDOW_SIZE];
+FeatureVector testWindow[BATCH_SIZE];
+uint8_t testLabels[BATCH_SIZE];
 uint16_t n_samples = 0;
 uint16_t correct = 0;
 uint16_t sum = 0;

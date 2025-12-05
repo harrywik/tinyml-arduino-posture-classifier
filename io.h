@@ -10,7 +10,8 @@ enum SerialCommandType {
     CMD_INFER,
     CMD_RESET,
     CMD_PERSIST,
-    CMD_SHARE_WEIGHTS
+    CMD_SHARE_WEIGHTS,
+    CMD_VAL_DONE
 };
 
 enum IOBackend {

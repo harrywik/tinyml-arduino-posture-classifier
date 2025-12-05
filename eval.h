@@ -1,3 +1,4 @@
+#pragma once
 #include <stdint.h>
 #include <Arduino.h>
 
@@ -12,4 +13,4 @@ void updateConfusionMatrix(const FeatureVector* testWindow, const uint8_t* testL
 
 void evaluateLoop();
 
-void printResults() 
+void printResults();
