@@ -3,7 +3,7 @@
 #include <Arduino_LSM9DS1.h> // IMU library for Nano 33 BLE Sense
 
 #define WINDOW_SIZE 64    // Number of samples per window
-#define NUM_FEATURES 12    // 6 from accel (mean+std) + 6 from gyro (mean+std)
+#define NUM_FEATURES 18    // 6 from accel (mean+std) + 6 from gyro (mean+std) + 6 from mag (mean+std)
 #define EMA_ALPHA 0.1      // For exponential moving average (TUNABLE)
 
 struct FeatureVector {
