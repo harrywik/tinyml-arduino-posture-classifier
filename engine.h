@@ -1,3 +1,5 @@
 #pragma once
 
-void runIteration();
+#define BATCH_SIZE 16
+
+void runIteration(void);
