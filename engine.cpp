@@ -27,7 +27,7 @@ void runIteration(void) {
 		case CMD_COLLECT: {
 			Coms.send("[CMD=COLLECT]: INIT");
 			// This will set nSamples
-			collectWindow(featuresBuffer, &nSamples);
+			collectWindow(featureBuffer, &nSamples);
 			Coms.send("[CMD=COLLECT]: COLLECTED");
 			// This will set equally many labels
 			if (!Coms.getLabel(labelsBuffer, nSamples)) {
@@ -39,15 +39,15 @@ void runIteration(void) {
 		case CMD_TRAIN: {
 			Coms.send("[CMD=TRAIN]: INIT");
 			Coms.send("[CMD=TRAIN]: UPDATE EMA");
-			updateEMA(featuresBuffer, nSamples);
+			updateEMA(featureBuffer, nSamples);
 			Coms.send("[CMD=TRAIN]: NORMALIZATION");
-			normalizeWindow(featuresBuffer, nSamples);
+			normalizeWindow(featureBuffer, nSamples);
 			Coms.send("[CMD=TRAIN]: GRADIENT DESCENT");
-			trainOutputLayer(featuresBuffer, labelsBuffer, nSamples, 0.01f);
+			trainOutputLayer(featureBuffer, labelsBuffer, nSamples, 0.01f);
 			size_t i = 0;
 			Coms.send("[CMD=TRAIN]: PRINTING PREDICTIONS:");
 			while (nSamples--) {
-				updateReservoir(featuresBuffer[i++]);
+				updateReservoir(featureBuffer[i++]);
 				uint8_t prediction = predict();
 				Coms.send(String(prediction));
 			}
@@ -55,10 +55,10 @@ void runIteration(void) {
 			break;
 		}
 		case CMD_VAL: {
-			normalizeWindow(featuresBuffer, nSamples);
+			normalizeWindow(featureBuffer, nSamples);
 			size_t i = 0;
 			while (nSamples--) {
-				updateReservoir(featuresBuffer[i++]);
+				updateReservoir(featureBuffer[i++]);
 				uint8_t prediction = predict();
 				Coms.send(String(prediction));
 			}
@@ -66,11 +66,11 @@ void runIteration(void) {
 			break;
 		}
 		case CMD_INFER: {
-			collectWindow(featuresBuffer, &nSamples);
-			normalizeWindow(featuresBuffer, nSamples);
+			collectWindow(featureBuffer, &nSamples);
+			normalizeWindow(featureBuffer, nSamples);
 			size_t i = 0;
 			while (nSamples--) {
-				updateReservoir(featuresBuffer[i++]);
+				updateReservoir(featureBuffer[i++]);
 				uint8_t prediction = predict();
 				Coms.send(String(prediction));
 			}
