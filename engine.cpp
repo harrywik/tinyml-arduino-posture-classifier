@@ -10,7 +10,7 @@
 // True labels remain constant for a batch 
 FeatureVector featureBuffer[BATCH_SIZE];
 // Label buffer is also used for predictions and may not
-uint8_t labelsBuffer[BATCH_SIZE];
+uint8_t labelBuffer[BATCH_SIZE];
 
 uint16_t nSamples = 0;
 
@@ -20,28 +20,29 @@ void runIteration(void) {
 	switch (order) {
 		case CMD_NONE:
 			updateIMU();
-			if (IMUbufferReady()) {
+			if (IMUwindowReady()) {
+				// No IO here should be quick
 				FeatureVector state = computeFeatures();
+				updateEMA(state);
+				normalizeVector(state);
 				updateReservoir(state);
 			}
 			return;
 		case CMD_TRAIN: {
 			Coms.send("[CMD=TRAIN]: INIT");
 			// This will set nSamples
-			collectWindow(featureBuffer, &nSamples);
+			collectBuffer(featureBuffer, &nSamples);
 			Coms.send("[CMD=TRAIN]: COLLECTED");
 			// This will set equally many labels
-			if (!Coms.getLabel(labelsBuffer, nSamples)) {
+			if (!Coms.getLabel(labelBuffer, nSamples)) {
 				Coms.send("Bad input");
 				nSamples = 0;
 				break;
 			}
-			Coms.send("[CMD=TRAIN]: UPDATE EMA");
-			updateEMA(featureBuffer, nSamples);
 			Coms.send("[CMD=TRAIN]: NORMALIZATION");
-			normalizeWindow(featureBuffer, nSamples);
+			normalizeBuffer(featureBuffer, nSamples);
 			Coms.send("[CMD=TRAIN]: GRADIENT DESCENT");
-			trainOutputLayer(featureBuffer, labelsBuffer, nSamples, LEARNING_RATE);
+			trainOutputLayer(featureBuffer, labelBuffer, nSamples, LEARNING_RATE);
 			size_t i = 0;
 			Coms.send("[CMD=TRAIN]: PRINTING PREDICTIONS:");
 			while (nSamples--) {
@@ -65,8 +66,8 @@ void runIteration(void) {
 		*/
 		case CMD_INFER: {
 			Coms.send("[CMD=INFER]: INIT");
-			collectWindow(featureBuffer, &nSamples);
-			normalizeWindow(featureBuffer, nSamples);
+			collectBuffer(featureBuffer, &nSamples);
+			normalizeBuffer(featureBuffer, nSamples);
 			size_t i = 0;
 			while (nSamples--) {
 				updateReservoir(featureBuffer[i++]);
