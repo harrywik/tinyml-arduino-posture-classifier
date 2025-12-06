@@ -25,22 +25,17 @@ void runIteration(void) {
 				updateReservoir(state);
 			}
 			return;
-		case CMD_COLLECT: {
-			Coms.send("[CMD=COLLECT]: INIT");
+		case CMD_TRAIN: {
+			Coms.send("[CMD=TRAIN]: INIT");
 			// This will set nSamples
 			collectWindow(featureBuffer, &nSamples);
-			Coms.send("[CMD=COLLECT]: COLLECTED");
+			Coms.send("[CMD=TRAIN]: COLLECTED");
 			// This will set equally many labels
 			if (!Coms.getLabel(labelsBuffer, nSamples)) {
 				Coms.send("Bad input");
 				nSamples = 0;
+				break;
 			}
-			break;
-		}
-		case CMD_TRAIN: {
-			Coms.send("[CMD=TRAIN]: INIT");
-			Coms.send("[CMD=TRAIN]: UPDATE EMA");
-			updateEMA(featureBuffer, nSamples);
 			Coms.send("[CMD=TRAIN]: NORMALIZATION");
 			normalizeWindow(featureBuffer, nSamples);
 			Coms.send("[CMD=TRAIN]: GRADIENT DESCENT");
@@ -53,11 +48,13 @@ void runIteration(void) {
 				Coms.send(String(prediction));
 			}
 			nSamples = 0;
+			Coms.send("[CMD=TRAIN]: UPDATE EMA");
+			updateEMA(featureBuffer, nSamples);
+			Coms.send("[CMD=TRAIN]: DONE");
 			break;
 		}
 		case CMD_VAL: {
 			evaluateLoop();
-			nSamples = 0;
 			break;
 		}
 		case CMD_VAL_DONE:{
@@ -65,6 +62,7 @@ void runIteration(void) {
 			break;
 		}
 		case CMD_INFER: {
+			Coms.send("[CMD=INFER]: INIT");
 			collectWindow(featureBuffer, &nSamples);
 			normalizeWindow(featureBuffer, nSamples);
 			size_t i = 0;
@@ -74,17 +72,20 @@ void runIteration(void) {
 				Coms.send(String(prediction));
 			}
 			nSamples = 0;
+			Coms.send("[CMD=INFER]: DONE");
 			break;
 		}
 		case CMD_RESET: {
 			Coms.send("[CMD=RESET]: INIT");
 			resetMetrics();
+			Coms.send("[CMD=RESET]: FLUSHED EVAL");
 			if (rmKVpersistedEMA()) {
 				Coms.send("[CMD=RESET]: REMOVED EMA");
 			}
 			if (rmKVpersistedWeights()) {
 				Coms.send("[CMD=RESET]: REMOVED W_out");
 			}
+			Coms.send("[CMD=RESET]: DONE");
 			break;
 		}
 		case CMD_SHARE_WEIGHTS: {

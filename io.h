@@ -4,7 +4,6 @@
 
 enum SerialCommandType {
     CMD_NONE,
-    CMD_COLLECT,
     CMD_TRAIN,
     CMD_VAL,
     CMD_INFER,
