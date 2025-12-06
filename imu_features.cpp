@@ -10,6 +10,10 @@ static float gyroX[WINDOW_SIZE];
 static float gyroY[WINDOW_SIZE];
 static float gyroZ[WINDOW_SIZE];
 
+static float magX[WINDOW_SIZE];
+static float magY[WINDOW_SIZE];
+static float magZ[WINDOW_SIZE];
+
 static float EMAs[NUM_FEATURES] = {0.0};
 
 static uint8_t sampleIndex = 0;
@@ -32,12 +36,17 @@ bool IMUbufferReady(void) {
 
 // Add new sample to the circular buffer
 void updateIMU() {
-    float ax, ay, az, gx, gy, gz;
+    float ax, ay, az;
+    float gx, gy, gz;
+    float mx, my, mz;
 
-    if (IMU.accelerationAvailable() && IMU.gyroscopeAvailable()) {
+    if (IMU.accelerationAvailable() && 
+        IMU.gyroscopeAvailable() &&
+        IMU.magneticFieldAvailable()) {
 
         IMU.readAcceleration(ax, ay, az);
         IMU.readGyroscope(gx, gy, gz);
+        IMU.readMagneticField(mx, my, mz);
 
         accelX[sampleIndex] = ax;
         accelY[sampleIndex] = ay;
@@ -46,6 +55,10 @@ void updateIMU() {
         gyroX[sampleIndex] = gx;
         gyroY[sampleIndex] = gy;
         gyroZ[sampleIndex] = gz;
+
+        magX[sampleIndex] = mx;
+        magY[sampleIndex] = my;
+        magZ[sampleIndex] = mz;
 
         sampleIndex++;
         if (sampleIndex >= WINDOW_SIZE) {
@@ -106,6 +119,19 @@ FeatureVector computeFeatures() {
     fv.features[idx++] = mean;
     fv.features[idx++] = stddev;
 
+    // Mag X/Y/Z
+    computeMeanStd(magX, count, mean, stddev);
+    fv.features[idx++] = mean;
+    fv.features[idx++] = stddev;
+
+    computeMeanStd(magY, count, mean, stddev);
+    fv.features[idx++] = mean;
+    fv.features[idx++] = stddev;
+
+    computeMeanStd(magZ, count, mean, stddev);
+    fv.features[idx++] = mean;
+    fv.features[idx++] = stddev;
+
     return fv;
 }
 
@@ -114,7 +140,7 @@ void collectWindow(FeatureVector (&window)[BATCH_SIZE], uint16_t *nSamples) {
 	while (*nSamples < BATCH_SIZE) {
 	    updateIMU(); 
 	    if (bufferFilled && sampleIndex == 0) {
-		window[(*nSamples)++] = computeFeatures();
+		    window[(*nSamples)++] = computeFeatures();
 	    }
 	}
 }
