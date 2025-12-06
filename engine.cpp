@@ -5,7 +5,7 @@
 #include "button.h"
 #include "persistance.h"
 #include "imu_features.h"
-#include "eval.h"
+// #include "eval.h"
 
 // True labels remain constant for a batch 
 FeatureVector featureBuffer[BATCH_SIZE];
@@ -53,6 +53,7 @@ void runIteration(void) {
 			Coms.send("[CMD=TRAIN]: DONE");
 			break;
 		}
+		/*
 		case CMD_VAL: {
 			evaluateLoop();
 			break;
@@ -61,6 +62,7 @@ void runIteration(void) {
 			printResults();
 			break;
 		}
+		*/
 		case CMD_INFER: {
 			Coms.send("[CMD=INFER]: INIT");
 			collectWindow(featureBuffer, &nSamples);
@@ -77,7 +79,8 @@ void runIteration(void) {
 		}
 		case CMD_RESET: {
 			Coms.send("[CMD=RESET]: INIT");
-			resetMetrics();
+			// Uncomment when eval works
+			// resetMetrics();
 			Coms.send("[CMD=RESET]: FLUSHED EVAL");
 			if (rmKVpersistedEMA()) {
 				Coms.send("[CMD=RESET]: REMOVED EMA");
