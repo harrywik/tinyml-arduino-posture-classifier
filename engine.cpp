@@ -36,6 +36,8 @@ void runIteration(void) {
 				nSamples = 0;
 				break;
 			}
+			Coms.send("[CMD=TRAIN]: UPDATE EMA");
+			updateEMA(featureBuffer, nSamples);
 			Coms.send("[CMD=TRAIN]: NORMALIZATION");
 			normalizeWindow(featureBuffer, nSamples);
 			Coms.send("[CMD=TRAIN]: GRADIENT DESCENT");
@@ -48,8 +50,6 @@ void runIteration(void) {
 				Coms.send(String(prediction));
 			}
 			nSamples = 0;
-			Coms.send("[CMD=TRAIN]: UPDATE EMA");
-			updateEMA(featureBuffer, nSamples);
 			Coms.send("[CMD=TRAIN]: DONE");
 			break;
 		}
