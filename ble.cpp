@@ -1,9 +1,24 @@
 #include <ArduinoBLE.h>
 #include "ble.h"
+#include "esn.h"
+#include "io.h"
 
 BLEService customService(BLE_SLAVE_UUID);
 uint8_t permissions = BLERead | BLEWrite | BLENotify;
 BLECharacteristic sensorCharacteristic(BLE_CHARACTERISTIC_UUID, permissions, 64);
+
+static BLEDevice peerDevice; // Store paired device
+static bool isCentral = false; // Mark whether current role is Central or Peripheral
+static bool peerConnected = false; // Mark point-to-point connection status
+static bool weightSharingActive = false; // Mark whether weight sharing is in progress
+
+// Protocol message types
+enum BLEMsgType {
+  MSG_TYPE_CMD = 0,      // Regular command
+  MSG_TYPE_BATCH_COUNT = 1, // Batch count
+  MSG_TYPE_WEIGHTS = 2,     // Weight data
+  MSG_TYPE_DONE = 3         // Exchange completion signal
+};
 
 
 bool initBLE(void) {
