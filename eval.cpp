@@ -17,7 +17,7 @@ void resetMetrics() {
     }
 }
 
-void printMultiClassMetrics(uint16_t n_samples) {
+void printMultiClassMetrics() {
     const float EPSILON = 0.000001f;
     float precision_sum = 0.0f;
     float recall_sum = 0.0f;
@@ -148,10 +148,10 @@ void evaluateLoop() {
 
 void printResults() {
 
-    float accuracy = (float)correct / n_samples * 100.0f;
+    float accuracy = (float)correct / sum * 100.0f;
     Coms.send("Evaluation Accuracy: ");
     Coms.send(String(accuracy));
     Coms.send("%");
 
-    printMultiClassMetrics(n_samples);
+    printMultiClassMetrics();
 }
