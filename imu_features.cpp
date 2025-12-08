@@ -17,7 +17,7 @@ static float magZ[WINDOW_SIZE];
 static float EMAs[NUM_FEATURES] = {0.0};
 
 static uint8_t sampleIndex = 0;
-static bool bufferFilled = false;
+static bool windowFilled = false;
 
 // Initialize IMU sensor
 bool initIMU() {
@@ -29,8 +29,8 @@ bool initIMU() {
     	return true;
 }
 
-bool IMUbufferReady(void) {
-	return bufferFilled;
+bool IMUwindowReady(void) {
+	return windowFilled;
 }
 
 
@@ -63,7 +63,7 @@ void updateIMU() {
         sampleIndex++;
         if (sampleIndex >= WINDOW_SIZE) {
             sampleIndex = 0;
-            bufferFilled = true;
+            windowFilled = true;
         }
     }
 }
@@ -88,7 +88,7 @@ static void computeMeanStd(const float* data, uint8_t size, float& mean, float& 
 FeatureVector computeFeatures() {
     FeatureVector fv;
 
-    uint8_t count = bufferFilled ? WINDOW_SIZE : sampleIndex;
+    uint8_t count = windowFilled ? WINDOW_SIZE : sampleIndex;
 
     float mean, stddev;
     uint8_t idx = 0;
@@ -135,24 +135,21 @@ FeatureVector computeFeatures() {
     return fv;
 }
 
-void collectWindow(FeatureVector (&window)[BATCH_SIZE], uint16_t *nSamples) {
+void collectBuffer(FeatureVector (&featureBuffer)[BATCH_SIZE], uint16_t *nSamples) {
 	*nSamples = 0;
 	while (*nSamples < BATCH_SIZE) {
 	    updateIMU(); 
-	    if (bufferFilled && sampleIndex == 0) {
-		    window[(*nSamples)++] = computeFeatures();
+	    if (windowFilled && sampleIndex == 0) {
+	        FeatureVector fv = computeFeatures();
+		updateEMA(fv);
+		featureBuffer[(*nSamples)++] = fv;
 	    }
 	}
 }
 
-void updateEMA(FeatureVector (&featureBuffer)[BATCH_SIZE], uint16_t nSamples) {
+void updateEMA(FeatureVector vector) {
 	for (size_t fi = 0; fi < NUM_FEATURES; fi++) {
-		float mu = 0;
-		for (size_t wi = 0; wi < nSamples; wi++) {
-			mu += featureBuffer[wi].features[fi];
-		}
-		mu /= nSamples;
-		EMAs[fi] = EMA_ALPHA * EMAs[fi] + (1 - EMA_ALPHA) * mu;
+		EMAs[fi] = (1 - EMA_ALPHA) * EMAs[fi] + EMA_ALPHA * vector.features[fi];
 	}
 }
 
@@ -160,7 +157,13 @@ void persistEMA(void) {
     	setKVPersistedEMA(EMAs);
 }
 
-void normalizeWindow(FeatureVector (&featureBuffer)[BATCH_SIZE], uint16_t nSamples) {
+void normalizeVector(FeatureVector &vector) {
+	for (size_t fi = 0; fi < NUM_FEATURES; fi++) {
+		vector.features[fi] -= EMAs[fi];
+	}
+}
+
+void normalizeBuffer(FeatureVector (&featureBuffer)[BATCH_SIZE], uint16_t nSamples) {
 	for (size_t wi = 0; wi < nSamples; wi++) {
 		for (size_t fi = 0; fi < NUM_FEATURES; fi++) {
 			featureBuffer[wi].features[fi] -= EMAs[fi];
