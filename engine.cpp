@@ -62,7 +62,7 @@ void runIteration(void) {
 		}
 		case CMD_VAL_DONE:{
 			printResults();
-			resetMetrics(); // for test, remove later
+			resetMetrics();
 			break;
 		}
 		case CMD_INFER: {
