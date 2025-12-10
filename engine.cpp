@@ -99,6 +99,21 @@ void runIteration(void) {
 		}
 		case CMD_SHARE_WEIGHTS: {
 			// TODO: case CMD_SHARE_WEIGHTS:
+			turnOffLED();
+			uint16_t mem;
+			getNProcessedBatches(&mem);
+			uint16_t curr = mem + nBatchesProcessed;
+			shareW_out(&curr);
+			communicateUSBMode();
+			delay(1000);
+			communicateSuccess();
+			delay(1000);
+			communicateBLEMode();
+			delay(1000);
+			turnOffLED();
+			// Reset communication
+			coms = getCommunicationMode();
+			Coms.setBackend(coms);
 			break;
 		}
 		case CMD_PERSIST: {
@@ -107,7 +122,7 @@ void runIteration(void) {
 			Coms.send("[CMD=PERSIST]: WEIGHTS PERSISTED");
 			persistEMA();
 			Coms.send("[CMD=PERSIST]: EMAs PERSISTED");
-			communicatePersistance();
+			communicateSuccess();
 			if (incNProcessedBatches(nBatchesProcessed)) {
 				nBatchesProcessed = 0;
 				Coms.send("[CMD=PERSIST]:");

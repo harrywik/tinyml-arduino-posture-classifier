@@ -28,7 +28,7 @@ void communicateBLEMode(void) {
 	digitalWrite(LEDB, LOW);
 }
 
-void communicatePersistance(void) {
+void communicateSuccess(void) {
 	turnOffLED();
 	// Green is persistance
 	// LOW is ON

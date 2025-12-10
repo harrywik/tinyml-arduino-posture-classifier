@@ -9,4 +9,4 @@ void communicateUSBMode(void);
 // Red light
 void communicateBLEMode(void);
 // Green light
-void communicatePersistance(void);
+void communicateSuccess(void);

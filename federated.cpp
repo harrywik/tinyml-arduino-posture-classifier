@@ -34,5 +34,5 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 	}
 	*nBatchesOnDevice = n_tot;
 	setW_out(W_a);
-	return true;
+       	return true;
 }

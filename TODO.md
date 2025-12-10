@@ -19,7 +19,7 @@
           The peripheral responds with its number of processed batches.
           Then the central device will send its output layer weights
           and as a response get the peripheral's.
-          Both parties now have the necessary information 
+    - [x] Both parties now have the necessary information 
           and will update the output weights according to:
           $$
             W_{out}^{(a)} = \frac{n^{(a)} W_{out}^{(a)} + n^{(b)} W_{out}^{(b)}}{n^{(a)} + n^{(b)}}
@@ -27,4 +27,4 @@
 
     - [ ] Persist the new weights 
     - [ ] Persist the new number of batches having been processed to be $n^{(a)} + n^{(b)}$
-    - [ ] Communicate to the user as usual by turning the LED green
+    - [x] Communicate to the user as usual by turning the LED green

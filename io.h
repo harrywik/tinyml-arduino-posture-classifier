@@ -40,7 +40,7 @@ public:
     // model weight exchange, for federated learning
     bool sendModel(float* weights, size_t len);
     bool receiveModel(float* weights, size_t len);
-    
+
 private:
     IOBackend currentBackend = IO_SERIAL;
     BLEMode currentBLEMode = BLE_PERIPHERAL;
