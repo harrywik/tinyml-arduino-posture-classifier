@@ -111,6 +111,134 @@ bool waitForPeerOrBecomeCentral() {
     return connectToAnyKnownPeer();
 }
 
+
+bool performWeightSharing(uint16_t localCount) { // Accept local count as argument
+    if (!peerConnected) {
+        Serial.println("Cannot share weights: Not connected to peer.");
+        return false;
+    }
+
+    uint16_t remoteCount = 0; // To store the count received from the peer
+
+    Serial.print("Local training count (e.g., samples/batches): ");
+    Serial.println(localCount);
+
+    if (isCentral) {
+        // Central sends its local count first
+        if (!sendBLEProtocol(MSG_TYPE_BATCH_COUNT, (uint8_t*)&localCount, sizeof(localCount))) {
+            Serial.println("Failed to send local count.");
+            return false;
+        }
+        // Central waits to receive peer's count
+        if (!receiveBLEProtocol(MSG_TYPE_BATCH_COUNT, (uint8_t*)&remoteCount, sizeof(remoteCount))) {
+            Serial.println("Failed to receive remote count.");
+            return false;
+        }
+    } else { // isPeripheral
+        // Peripheral receives peer's count first
+        if (!receiveBLEProtocol(MSG_TYPE_BATCH_COUNT, (uint8_t*)&remoteCount, sizeof(remoteCount))) {
+            Serial.println("Failed to receive remote count.");
+            return false;
+        }
+        // Peripheral sends its local count afterwards
+        if (!sendBLEProtocol(MSG_TYPE_BATCH_COUNT, (uint8_t*)&localCount, sizeof(localCount))) {
+            Serial.println("Failed to send local count.");
+            return false;
+        }
+    }
+
+    Serial.print("Remote training count: ");
+    Serial.println(remoteCount);
+
+    // --- Exchange Weights ---
+    float localWeights[OUTPUT_SIZE][RESERVOIR_SIZE];
+    float remoteWeights[OUTPUT_SIZE][RESERVOIR_SIZE];
+
+    // Get local weights from the global 'esn' instance
+    memcpy(localWeights, esn.W_out, sizeof(localWeights));
+
+    if (isCentral) {
+        // Central sends its weights
+        if (!sendBLEProtocol(MSG_TYPE_WEIGHTS, (uint8_t*)localWeights, sizeof(localWeights))) {
+             Serial.println("Failed to send local weights.");
+             return false;
+        }
+        // Central receives peer's weights
+        if (!receiveBLEProtocol(MSG_TYPE_WEIGHTS, (uint8_t*)remoteWeights, sizeof(remoteWeights))) {
+             Serial.println("Failed to receive remote weights.");
+             return false;
+        }
+    } else { // isPeripheral
+        // Peripheral receives peer's weights
+        if (!receiveBLEProtocol(MSG_TYPE_WEIGHTS, (uint8_t*)remoteWeights, sizeof(remoteWeights))) {
+             Serial.println("Failed to receive remote weights.");
+             return false;
+        }
+        // Peripheral sends its weights
+        if (!sendBLEProtocol(MSG_TYPE_WEIGHTS, (uint8_t*)localWeights, sizeof(localWeights))) {
+             Serial.println("Failed to send local weights.");
+             return false;
+        }
+    }
+
+    // Perform FedAvg: Calculate weighted average of weights
+    uint32_t total_count = (uint32_t)localCount + remoteCount; // Use uint32_t to prevent overflow if needed
+    if (total_count > 0) {
+        for (int i = 0; i < OUTPUT_SIZE; i++) {
+            for (int j = 0; j < RESERVOIR_SIZE; j++) {
+                // FedAvg formula: W_avg = (n_local * W_local + n_remote * W_remote) / (n_local + n_remote)
+                esn.W_out[i][j] = (float)(localCount * localWeights[i][j] + remoteCount * remoteWeights[i][j]) / (float)total_count;
+            }
+        }
+        Serial.println("Weights aggregated using FedAvg successfully.");
+    } else {
+        Serial.println("Warning: Total count is 0, cannot aggregate weights.");
+        return false; // Or handle this specific case as needed
+    }
+
+    // Send completion signal
+    sendBLEProtocol(MSG_TYPE_DONE, (uint8_t*)"", 0);
+
+    // Disconnect and restore peripheral mode
+    peerDevice.disconnect();
+    peerConnected = false;
+    isCentral = false;
+    weightSharingActive = false;
+    Serial.println("Disconnected from peer, restarting peripheral advertising...");
+    BLE.advertise(); // Restart advertising
+
+    return true;
+}
+
+bool sendBLEProtocol(BLEMsgType type, uint8_t* data, size_t len) {
+    if (!peerConnected) return false;
+    // Message format: [type_byte][data...]
+    uint8_t packet[65]; // 64 data + 1 type byte
+    if (len > 64) {
+        Serial.println("Error: Data too large for single packet.");
+        return false;
+    }
+    packet[0] = (uint8_t)type;
+    memcpy(packet + 1, data, len);
+    peerDevice.write(sensorCharacteristic, packet, len + 1);
+    return true;
+}
+
+bool receiveBLEProtocol(BLEMsgType type, uint8_t* data, size_t expected_len) {
+    if (!peerConnected) return false;
+    if (sensorCharacteristic.written()) {
+        uint8_t* value = (uint8_t*)sensorCharacteristic.value();
+        size_t value_len = sensorCharacteristic.valueLength();
+        if (value_len > 0 && value[0] == (uint8_t)type) {
+            // Copy payload (skip type byte)
+            size_t payload_len = min(expected_len, value_len - 1);
+            memcpy(data, value + 1, payload_len);
+            return true;
+        }
+    }
+    return false;
+}
+
 bool initBLE(void) {
 	if (!BLE.begin())
 		return false;
