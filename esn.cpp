@@ -45,6 +45,14 @@ void initESN() {
     }
 }
 
+shareableWeights getW_out(void) {
+	return esn.W_out;
+}
+
+void setW_out(shareableWeights W_new) {
+	memcpy(W_new, esn.W_out, sizeof(esn.W_out));
+}
+
 void persistOutputWeights(void) {
 	// TODO:
 	// log any errors

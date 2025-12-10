@@ -75,9 +75,9 @@ bool IO::getLabel(uint8_t* labelBuffer, uint16_t nSamples) {
 	// Range check
         if (label >= NUM_FEATURES)
             return false;
-            for (size_t i = 0; i < nSamples; i++) {
-                labelBuffer[i] = label;
-            }
+        for (size_t i = 0; i < nSamples; i++) {
+            labelBuffer[i] = label;
+        }
         return true;
     } else if (currentBackend == IO_BLE) {
         // send request for label
@@ -108,6 +108,51 @@ bool IO::getLabel(uint8_t* labelBuffer, uint16_t nSamples) {
         // timeout
         BLESend("[ERROR]: LABEL TIMEOUT\n"); 
         return false;
+    }
+    
+    return false;
+}
+
+bool IO::getMAC(void) {
+    if (currentBackend == IO_SERIAL) {
+        CounterpartyMAC address;
+
+        while (Serial.available()) { 
+            Serial.read(); 
+        }
+        Serial.print("MAC-address: ");
+
+        unsigned long start = millis();
+        while (Serial.available() == 0 && (millis() - start) < 30000) {
+            ;
+        }
+
+        int bytesRead = Serial.readBytesUntil('\n', address, sizeof(address) - 1); 
+
+        if (bytesRead == 0) {
+	    peripheral = {0};
+	    currentBLEMode = BLE_PERIPHERAL;
+            return false;
+        }
+        address[bytesRead] = '\0';
+
+        while (Serial.available()) {
+            Serial.read();
+        }
+	for (size_t c = 0; c < sizeof(address) - 1; c++) {
+	    	if (c % 3 == 2 && address[c] != ':') {
+			Serial.println("MALFORMED MAC...");
+	    		peripheral = {0};
+	    		currentBLEMode = BLE_PERIPHERAL;
+			return false;
+		}
+	}
+	peripheral = address;
+	currentBLEMode = BLE_CENTRAL;
+        return true;
+    } else if (currentBackend == IO_BLE) {
+	//TODO:
+	// implement this for bluetooth as well
     }
     
     return false;

@@ -2,6 +2,11 @@
 #include <Arduino.h> 
 #include "button.h"
 
+enum BLEMode {
+    BLE_CENTRAL,
+    BLE_PERIPHERAL
+};
+
 enum SerialCommandType {
     CMD_NONE,
     CMD_TRAIN,
@@ -12,6 +17,8 @@ enum SerialCommandType {
     CMD_PERSIST,
     CMD_SHARE_WEIGHTS
 };
+
+typedef char CounterpartyMAC[18];
 
 enum IOBackend {
     IO_SERIAL,
@@ -28,12 +35,16 @@ public:
     SerialCommandType receive();
     // request label input
     bool getLabel(uint8_t* labelBuffer, uint16_t nSamples);
+    // receive counterparty MAC address
+    bool getMAC(void);
     // model weight exchange, for federated learning
     bool sendModel(float* weights, size_t len);
     bool receiveModel(float* weights, size_t len);
     
 private:
     IOBackend currentBackend = IO_SERIAL;
+    BLEMode currentBLEMode = BLE_PERIPHERAL;
+    CounterpartyMAC peripheral = {};
 };
 
 extern IO Coms;

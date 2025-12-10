@@ -15,11 +15,17 @@ struct ESN {
     float W_out[OUTPUT_SIZE][RESERVOIR_SIZE]; // Output weights (trainable)
 };
 
+typedef float shareableWeights[OUTPUT_SIZE][RESERVOIR_SIZE];
+
 void initESN();
 
 void updateReservoir(const FeatureVector& fv);
 
 void trainOutputLayer(const FeatureVector* X, const uint8_t* y, uint16_t n_samples, float learning_rate = LEARNING_RATE);
+
+shareableWeights getW_out(void);
+
+void setW_out(shareableWeights W_new);
 
 uint8_t predict();
 
