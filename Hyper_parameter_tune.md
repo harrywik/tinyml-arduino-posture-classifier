@@ -75,6 +75,6 @@ The model memorizes the previous states, leading to inaccurate predictions durin
 
 1. Best to define three classes as **inactive(still)**, **walking(gently waving arms)**, **active(doing puches or shaking arms rapidly)**, ortherwise the model might fail to distinguish similar classes.
 
-2. **Skip updateEMA(state) during continuous reservoir updating**. Otherwise, the normalization would be massed up by the noises. This improves the performance significantly!
+2. **Skip updateEMA(state) during continuous reservoir updating**. Otherwise, the normalization would be messed up by the noises. This improves the performance significantly!
 
 3. **Bset parameter setting**: RESERVOIR_SIZE = 20, LEARNING_RATE = 0.01, WINDOW_SIZE = 128, BATCH_SIZE = 8, EMA_ALPHA = 0.005.
