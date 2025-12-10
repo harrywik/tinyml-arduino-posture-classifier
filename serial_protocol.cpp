@@ -38,16 +38,10 @@ SerialCommandType parseSerialCommand(String& line) {
 
     if (line == "TRAIN") {
         return CMD_TRAIN;
-    /*
-     *
-     * Uncomment when eval works
-     *
     } else if (line == "VALIDATE") {
         return CMD_VAL;
     } else if (line == "VALIDATE_DONE") {
         return CMD_VAL_DONE;
-     *
-     */
     } else if (line == "INFER") {
         return CMD_INFER;
     } else if (line == "RESET") {

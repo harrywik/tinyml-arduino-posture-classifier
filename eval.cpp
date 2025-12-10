@@ -3,7 +3,7 @@
 #include "imu_features.h"
 #include "io.h"
 
-uint16_t CONFUSION_MATRIX[3][3] = {0};
+uint16_t CONFUSION_MATRIX[OUTPUT_SIZE][OUTPUT_SIZE] = {0};
 FeatureVector testWindow[BATCH_SIZE];
 uint8_t testLabels[BATCH_SIZE];
 uint16_t n_samples = 0;
@@ -11,6 +11,8 @@ uint16_t correct = 0;
 uint16_t sum = 0;
 
 void resetMetrics() {
+    sum = 0;
+    correct = 0;
     for (int i = 0; i < OUTPUT_SIZE; i++) {
         for (int j = 0; j < OUTPUT_SIZE; j++) 
             CONFUSION_MATRIX[i][j] = 0;
@@ -104,7 +106,6 @@ void printMultiClassMetrics() {
 
 void updateConfusionMatrix(const FeatureVector* testWindow, const uint8_t* testLabels, \
     uint16_t n_samples) {
-    
 
     for (int i = 0; i < n_samples; i++) {
         updateReservoir(testWindow[i]);
@@ -115,36 +116,8 @@ void updateConfusionMatrix(const FeatureVector* testWindow, const uint8_t* testL
         if (testLabels[i] < 3 && prediction < 3)
             CONFUSION_MATRIX[testLabels[i]][prediction]++;
     }
-
-
 }
 
-void evaluateLoop() {
-
-    // resetMetrics();
-	n_samples = 0;
-
-    //for (int i = 0; i < OUTPUT_SIZE; i++) {
-    delay(1000);
-    Coms.send("\n--- Evaluation Loop ---");
-    Coms.send(" ------------------------\n");
-    Coms.send("Collect evaluation data");
-    delay(500);
-    Coms.send("Start collecting now!\n");
-    collectWindow(testWindow, &n_samples);
-	Coms.send("Data collected. Waiting for Label input...");
-    delay(1500);
-    sum += n_samples;
-    if (!Coms.getLabel(testLabels, n_samples)) {
-			Coms.send("Bad input");
-			return;
-		}
-    normalizeWindow(testWindow, n_samples);
-    updateConfusionMatrix(testWindow, testLabels, n_samples);
-    delay(500);
-    //}
-
-}
 
 void printResults() {
 
@@ -155,3 +128,28 @@ void printResults() {
 
     printMultiClassMetrics();
 }
+
+void evaluateLoop() {
+
+	n_samples = 0;
+
+    delay(1000);
+    Coms.send("\n--- Evaluation Loop ---");
+    Coms.send(" ------------------------\n");
+    Coms.send("Collect evaluation data");
+    delay(500);
+    Coms.send("Start collecting now!\n");
+    collectBuffer(testWindow, &n_samples);
+	Coms.send("Data collected. Waiting for Label input...");
+    delay(1000);
+    if (!Coms.getLabel(testLabels, n_samples)) {
+			Coms.send("Bad input");
+			return;
+		}
+    sum += n_samples;
+    normalizeBuffer(testWindow, n_samples);
+    updateConfusionMatrix(testWindow, testLabels, n_samples);
+    delay(500);
+
+}
+

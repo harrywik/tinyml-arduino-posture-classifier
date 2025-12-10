@@ -5,7 +5,7 @@
 
 #define WINDOW_SIZE 128    // Number of samples per window
 #define NUM_FEATURES 18    // 6 from accel (mean+std) + 6 from gyro (mean+std) + 6 from mag (mean+std)
-#define EMA_ALPHA 0.01     // For exponential moving average (TUNABLE)
+#define EMA_ALPHA 0.005     // For exponential moving average (TUNABLE)
 
 struct FeatureVector {
     float features[NUM_FEATURES];

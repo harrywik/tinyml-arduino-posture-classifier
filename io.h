@@ -5,11 +5,8 @@
 enum SerialCommandType {
     CMD_NONE,
     CMD_TRAIN,
-    //
-    // Uncomment when eval branch works
-    //
-    // CMD_VAL,
-    // CMD_VAL_DONE,
+    CMD_VAL,
+    CMD_VAL_DONE,
     CMD_INFER,
     CMD_RESET,
     CMD_PERSIST,
