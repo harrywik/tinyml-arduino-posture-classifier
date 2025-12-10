@@ -113,7 +113,7 @@ void runIteration(void) {
 				Coms.send("[CMD=PERSIST]:");
 				uint16_t total;
 				getNProcessedBatches(&total);
-				Coms.send(total);
+				Coms.send(String(total));
 				Coms.send("BATCHES PROCESSED");
 			} else {
 				Coms.send("[CMD=PERSIST]: FAILED TO PERSIST BATCH_NUM");
