@@ -17,3 +17,8 @@ bool rmKVpersistedWeights(void);
 bool getKVPersistedEMA(float EMAs[NUM_FEATURES]);
 bool setKVPersistedEMA(float EMAs[NUM_FEATURES]);
 bool rmKVpersistedEMA(void);
+
+// Number of batches processed
+bool getNProcessedBatches(uint16_t* nBatches);
+bool incNProcessedBatches(uint16_t increment);
+bool rmNProcessedBatches(void);

@@ -6,7 +6,6 @@
 #include "imu_features.h"
 #include "serial_protocol.h"
 #include "io.h"
-#include "eval.h"
 
 CommunicationMode coms;
 

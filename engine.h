@@ -1,5 +1,5 @@
 #pragma once
 
-#define BATCH_SIZE 16
+#define BATCH_SIZE 8
 
 void runIteration(void);

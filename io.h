@@ -4,14 +4,13 @@
 
 enum SerialCommandType {
     CMD_NONE,
-    CMD_COLLECT,
     CMD_TRAIN,
     CMD_VAL,
+    CMD_VAL_DONE,
     CMD_INFER,
     CMD_RESET,
     CMD_PERSIST,
-    CMD_SHARE_WEIGHTS,
-    CMD_VAL_DONE
+    CMD_SHARE_WEIGHTS
 };
 
 enum IOBackend {

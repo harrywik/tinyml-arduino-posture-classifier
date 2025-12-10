@@ -10,9 +10,10 @@
 // True labels remain constant for a batch 
 FeatureVector featureBuffer[BATCH_SIZE];
 // Label buffer is also used for predictions and may not
-uint8_t labelsBuffer[BATCH_SIZE];
+uint8_t labelBuffer[BATCH_SIZE];
 
 uint16_t nSamples = 0;
+uint16_t nBatchesProcessed = 0;
 
 void runIteration(void) {
 	SerialCommandType order = Coms.receive();
@@ -20,31 +21,31 @@ void runIteration(void) {
 	switch (order) {
 		case CMD_NONE:
 			updateIMU();
-			if (IMUbufferReady()) {
+			if (IMUwindowReady()) {
+				// No IO here should be quick
 				FeatureVector state = computeFeatures();
+				// updateEMA(state); // Skip EMA update to prevent noise accumulation
+				normalizeVector(state);
 				updateReservoir(state);
 			}
 			return;
-		case CMD_COLLECT: {
-			Coms.send("[CMD=COLLECT]: INIT");
+		case CMD_TRAIN: {
+			// delay(500);
+			Coms.send("[CMD=TRAIN]: INIT");
 			// This will set nSamples
-			collectWindow(featureBuffer, &nSamples);
-			Coms.send("[CMD=COLLECT]: COLLECTED");
+			collectBuffer(featureBuffer, &nSamples);
+			Coms.send("[CMD=TRAIN]: COLLECTED");
 			// This will set equally many labels
-			if (!Coms.getLabel(labelsBuffer, nSamples)) {
+			if (!Coms.getLabel(labelBuffer, nSamples)) {
 				Coms.send("Bad input");
 				nSamples = 0;
+				break;
 			}
-			break;
-		}
-		case CMD_TRAIN: {
-			Coms.send("[CMD=TRAIN]: INIT");
-			Coms.send("[CMD=TRAIN]: UPDATE EMA");
-			updateEMA(featureBuffer, nSamples);
 			Coms.send("[CMD=TRAIN]: NORMALIZATION");
-			normalizeWindow(featureBuffer, nSamples);
+			normalizeBuffer(featureBuffer, nSamples);
 			Coms.send("[CMD=TRAIN]: GRADIENT DESCENT");
-			trainOutputLayer(featureBuffer, labelsBuffer, nSamples, LEARNING_RATE);
+			trainOutputLayer(featureBuffer, labelBuffer, nSamples, LEARNING_RATE);
+			nBatchesProcessed++;
 			size_t i = 0;
 			Coms.send("[CMD=TRAIN]: PRINTING PREDICTIONS:");
 			while (nSamples--) {
@@ -53,20 +54,22 @@ void runIteration(void) {
 				Coms.send(String(prediction));
 			}
 			nSamples = 0;
+			Coms.send("[CMD=TRAIN]: DONE");
 			break;
 		}
 		case CMD_VAL: {
 			evaluateLoop();
-			nSamples = 0;
 			break;
 		}
 		case CMD_VAL_DONE:{
 			printResults();
+			resetMetrics();
 			break;
 		}
 		case CMD_INFER: {
-			collectWindow(featureBuffer, &nSamples);
-			normalizeWindow(featureBuffer, nSamples);
+			Coms.send("[CMD=INFER]: INIT");
+			collectBuffer(featureBuffer, &nSamples);
+			normalizeBuffer(featureBuffer, nSamples);
 			size_t i = 0;
 			while (nSamples--) {
 				updateReservoir(featureBuffer[i++]);
@@ -74,17 +77,24 @@ void runIteration(void) {
 				Coms.send(String(prediction));
 			}
 			nSamples = 0;
+			Coms.send("[CMD=INFER]: DONE");
 			break;
 		}
 		case CMD_RESET: {
+			nBatchesProcessed = 0;
 			Coms.send("[CMD=RESET]: INIT");
 			resetMetrics();
+			Coms.send("[CMD=RESET]: FLUSHED EVAL");
 			if (rmKVpersistedEMA()) {
 				Coms.send("[CMD=RESET]: REMOVED EMA");
 			}
 			if (rmKVpersistedWeights()) {
 				Coms.send("[CMD=RESET]: REMOVED W_out");
 			}
+			if (rmNProcessedBatches()) {
+				Coms.send("[CMD=RESET]: REMOVED BATCH_NUM");
+			}
+			Coms.send("[CMD=RESET]: DONE");
 			break;
 		}
 		case CMD_SHARE_WEIGHTS: {
@@ -98,6 +108,16 @@ void runIteration(void) {
 			persistEMA();
 			Coms.send("[CMD=PERSIST]: EMAs PERSISTED");
 			communicatePersistance();
+			if (incNProcessedBatches(nBatchesProcessed)) {
+				nBatchesProcessed = 0;
+				Coms.send("[CMD=PERSIST]:");
+				uint16_t total;
+				getNProcessedBatches(&total);
+				Coms.send(String(total));
+				Coms.send("BATCHES PROCESSED");
+			} else {
+				Coms.send("[CMD=PERSIST]: FAILED TO PERSIST BATCH_NUM");
+			}
 			Coms.send("[CMD=PERSIST]: DONE");
 			break;
 		}
