@@ -66,14 +66,22 @@ bool rmKVpersistedEMA(void) {
 bool getNProcessedBatches(uint16_t* nBatches) {
 	size_t actual_size;
     	size_t ret = kv_get(BATCH_KEY, (uint8_t*) nBatches, BATCH_N_SIZE, &actual_size);
-    	return ret == KV_R_OK && actual_size == BATCH_N_SIZE;
+    	if (ret == KV_R_OK && actual_size == BATCH_N_SIZE)
+		return true;
+
+	*nBatches = 0;
+    	ret = kv_set(BATCH_KEY, (const uint8_t*) nBatches, BATCH_N_SIZE, 0);
+    	return ret == KV_R_OK;
+
 }
 // Increment from current number of batches processed
 bool incNProcessedBatches(uint16_t increment) {
 	uint16_t current;
 	if (!getNProcessedBatches(&current))
 		return false;
-    	size_t ret = kv_set(BATCH_KEY, (const uint8_t*) (current + increment), BATCH_N_SIZE, 0);
+
+	uint16_t updated = current + increment;
+    	size_t ret = kv_set(BATCH_KEY, (const uint8_t*) &updated, BATCH_N_SIZE, 0);
 
     	return ret == KV_R_OK;
 }
