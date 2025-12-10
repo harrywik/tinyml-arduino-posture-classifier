@@ -13,6 +13,7 @@ FeatureVector featureBuffer[BATCH_SIZE];
 uint8_t labelBuffer[BATCH_SIZE];
 
 uint16_t nSamples = 0;
+uint16_t nBatchesProcessed = 0;
 
 void runIteration(void) {
 	SerialCommandType order = Coms.receive();
@@ -29,7 +30,7 @@ void runIteration(void) {
 			}
 			return;
 		case CMD_TRAIN: {
-			delay(500);
+			// delay(500);
 			Coms.send("[CMD=TRAIN]: INIT");
 			// This will set nSamples
 			collectBuffer(featureBuffer, &nSamples);
@@ -44,6 +45,7 @@ void runIteration(void) {
 			normalizeBuffer(featureBuffer, nSamples);
 			Coms.send("[CMD=TRAIN]: GRADIENT DESCENT");
 			trainOutputLayer(featureBuffer, labelBuffer, nSamples, LEARNING_RATE);
+			nBatchesProcessed++;
 			size_t i = 0;
 			Coms.send("[CMD=TRAIN]: PRINTING PREDICTIONS:");
 			while (nSamples--) {
@@ -54,7 +56,6 @@ void runIteration(void) {
 			nSamples = 0;
 			Coms.send("[CMD=TRAIN]: DONE");
 			break;
-			delay(500);
 		}
 		case CMD_VAL: {
 			evaluateLoop();
@@ -80,6 +81,7 @@ void runIteration(void) {
 			break;
 		}
 		case CMD_RESET: {
+			nBatchesProcessed = 0;
 			Coms.send("[CMD=RESET]: INIT");
 			resetMetrics();
 			Coms.send("[CMD=RESET]: FLUSHED EVAL");
@@ -88,6 +90,9 @@ void runIteration(void) {
 			}
 			if (rmKVpersistedWeights()) {
 				Coms.send("[CMD=RESET]: REMOVED W_out");
+			}
+			if (rmNProcessedBatches()) {
+				Coms.send("[CMD=RESET]: REMOVED BATCH_NUM");
 			}
 			Coms.send("[CMD=RESET]: DONE");
 			break;
@@ -103,6 +108,16 @@ void runIteration(void) {
 			persistEMA();
 			Coms.send("[CMD=PERSIST]: EMAs PERSISTED");
 			communicatePersistance();
+			if (incNProcessedBatches(nBatchesProcessed)) {
+				nBatchesProcessed = 0;
+				Coms.send("[CMD=PERSIST]:");
+				uint16_t total;
+				getNProcessedBatches(&total);
+				Coms.send(total);
+				Coms.send("BATCHES PROCESSED");
+			} else {
+				Coms.send("[CMD=PERSIST]: FAILED TO PERSIST BATCH_NUM");
+			}
 			Coms.send("[CMD=PERSIST]: DONE");
 			break;
 		}

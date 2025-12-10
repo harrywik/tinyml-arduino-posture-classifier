@@ -6,7 +6,7 @@
     - [x] EMA_ALPHA
     - [x] LEARNING_RATE
     - [x] RESERVOIR_SIZE
-- [ ] Persist the number of batches that have been processed
+- [x] Persist the number of batches that have been processed
 - [ ] Weight sharing / Federated learning
     - [ ] CMD_SHARE_WEIGHTS to both devices
     - [ ] One receives the MAC-address of the counterparty
