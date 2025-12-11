@@ -46,6 +46,9 @@ bool attemptConnectionToPeripheral(uuid peripheralUUID) {
     // Store the connected peripheral for later use
     connectedPeripheral = peripheral;
 
+    // Discover attributes once after connection
+    connectedPeripheral.discoverAttributes();
+
     // Now connected
     return true;
 }
@@ -114,8 +117,7 @@ bool weightShareSend(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data, si
 	size_t chunk;
 
 	if (mode == WS_BLE_CENTRAL) {
-		// Use stored connected peripheral
-		connectedPeripheral.discoverAttributes();
+		// Use stored connected peripheral (attributes already discovered)
 		BLECharacteristic remoteChar = connectedPeripheral.characteristic(BLE_CHARACTERISTIC_UUID);
 
 		delay(10);

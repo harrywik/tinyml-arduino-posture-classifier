@@ -181,7 +181,7 @@ bool IO::sendModel(float* weights, size_t len) {
 bool IO::sendNBatches(const uint16_t n_a, size_t len) {
 	if (currentBackend == IO_SERIAL) {
 		Serial.println("SendNBatches()");
-		bool res =  weightShareReceive(currentBLEMode, MSG_TYPE_BATCH_COUNT, (uint8_t*) &n_a, len);
+		bool res =  weightShareSend(currentBLEMode, MSG_TYPE_BATCH_COUNT, (uint8_t*) &n_a, len);
 		if (currentBLEMode == WS_BLE_PERIPHERAL)
 			// Return to previous state
 			deinitAsPeripheral();
@@ -191,8 +191,8 @@ bool IO::sendNBatches(const uint16_t n_a, size_t len) {
 
 bool IO::receiveModel(float* weights, size_t len) {
 	if (currentBackend == IO_SERIAL) {
-		if (currentBLEMode == WS_BLE_PERIPHERAL) {
-			// Extra logic block as peripheral
+		if (currentBLEMode == WS_BLE_PERIPHERAL && !isBLEConnected()) {
+			// Extra logic block as peripheral - only init if not connected
 			initBLE();
 
 			while(!isBLEConnected()) {
