@@ -7,6 +7,9 @@ BLEService customService(BLE_SLAVE_UUID);
 uint8_t permissions = BLERead | BLEWrite | BLENotify;
 BLECharacteristic sensorCharacteristic(BLE_CHARACTERISTIC_UUID, permissions, 64);
 
+// Store connected peripheral for central mode
+BLEDevice connectedPeripheral;
+
 void deinitAsCentral(void) {
 	if (BLE.connected()) {
 		BLE.disconnect();
@@ -39,6 +42,9 @@ bool attemptConnectionToPeripheral(uuid peripheralUUID) {
         BLE.scanForUuid(peripheralUUID);
         return false;
     }
+
+    // Store the connected peripheral for later use
+    connectedPeripheral = peripheral;
 
     // Now connected
     return true;
@@ -108,10 +114,9 @@ bool weightShareSend(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data, si
 	size_t chunk;
 
 	if (mode == WS_BLE_CENTRAL) {
-		BLEDevice peripheral = BLE.available();
-
-		peripheral.discoverAttributes();
-		BLECharacteristic remoteChar = peripheral.characteristic(BLE_CHARACTERISTIC_UUID);
+		// Use stored connected peripheral
+		connectedPeripheral.discoverAttributes();
+		BLECharacteristic remoteChar = connectedPeripheral.characteristic(BLE_CHARACTERISTIC_UUID);
 
 		delay(10);
 
@@ -153,12 +158,11 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
 	size_t chunk;
 
 	if (mode == WS_BLE_CENTRAL) {
-		BLEDevice peripheral = BLE.available();
-		// check type of incoming
-		if (!peripheral) {
+		// Use stored connected peripheral
+		if (!connectedPeripheral) {
             		return false;
         }
-		BLECharacteristic remoteChar = peripheral.characteristic(BLE_CHARACTERISTIC_UUID);
+		BLECharacteristic remoteChar = connectedPeripheral.characteristic(BLE_CHARACTERISTIC_UUID);
         
 		while(!remoteChar.written()) { 
 			BLE.poll();
