@@ -120,6 +120,10 @@ bool weightShareSend(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data, si
 		// Use stored connected peripheral (attributes already discovered)
 		BLECharacteristic remoteChar = connectedPeripheral.characteristic(BLE_CHARACTERISTIC_UUID);
 
+		if (!remoteChar) {
+			return false;
+		}
+
 		delay(10);
 
 		// Send type byte first
@@ -129,11 +133,14 @@ bool weightShareSend(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data, si
 		while (bytes > 0) {
 			chunk = min(bytes, MAX_CHUNK_LENGTH);
 			remoteChar.writeValue(ptr, chunk);
-			delay(10);
+			delay(20);
 
 			ptr += chunk;
 			bytes -= chunk;
 		}
+
+		// Give peripheral extra time to process all chunks
+		delay(100);
 		return true;
 	} 
 	// mode == WS_BLE_PERIPHERAL
@@ -165,6 +172,10 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
             		return false;
         }
 		BLECharacteristic remoteChar = connectedPeripheral.characteristic(BLE_CHARACTERISTIC_UUID);
+
+		if (!remoteChar) {
+			return false;
+		}
         
 		while(!remoteChar.written()) { 
 			BLE.poll();
@@ -191,19 +202,32 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
 	while(!sensorCharacteristic.written()) {
 		BLE.poll();
 	}
-	size_t typeLen = sensorCharacteristic.valueLength();
 
-	if (typeLen != 1|| sensorCharacteristic.value()[0] != type)
+	// Read the type byte
+	if (sensorCharacteristic.valueLength() != 1)
 		return false;
 
-	// correct type 
+	uint8_t receivedType = sensorCharacteristic.value()[0];
+	if (receivedType != type)
+		return false;
+
+	// correct type
+	unsigned long startTime = millis();
+	const unsigned long timeout = 10000; // 10 second timeout
+
 	while(received < bytes) {
 		if(sensorCharacteristic.written()) {
 			chunk = sensorCharacteristic.valueLength();
 			memcpy(ptr + received, sensorCharacteristic.value(), chunk);
 			received += chunk;
+			startTime = millis(); // Reset timeout on successful receive
 		}
 		BLE.poll();
+
+		// Check for timeout
+		if (millis() - startTime > timeout) {
+			return false; // Timeout - didn't receive all data
+		}
 	}
 	return true;
 }
