@@ -35,7 +35,7 @@ bool attemptConnectionToPeripheral(uuid peripheralUUID) {
 	if (!peripheral.hasServiceUuid(peripheralUUID))
 		return false;
 	// Has correct UUID
-	if (BLE.connect(peripheral))
+	if (BLE.connected(peripheral))
 		return true;
 	// Otherwise retry
 	BLE.scanForUuid(peripheralUUID);

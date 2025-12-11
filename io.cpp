@@ -130,7 +130,6 @@ bool IO::getUUID(void) {
         int bytesRead = Serial.readBytesUntil('\n', address, sizeof(address) - 1); 
 
         if (bytesRead != sizeof(address) - 1) {
-	    peripheral = {0};
 	    currentBLEMode = WS_BLE_PERIPHERAL;
             return false;
         }

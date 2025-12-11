@@ -4,6 +4,7 @@
 #include "engine.h"
 #include "button.h"
 #include "persistance.h"
+#include "federated.h"
 #include "imu_features.h"
 #include "eval.h"
 
@@ -112,7 +113,7 @@ void runIteration(void) {
 			delay(1000);
 			turnOffLED();
 			// Reset communication
-			coms = getCommunicationMode();
+			CommunicationMode coms = getCommunicationMode();
 			Coms.setBackend(coms);
 			break;
 		}
