@@ -139,8 +139,10 @@ bool IO::getUUID(void) {
         while (Serial.available()) {
             Serial.read();
         }
-	    strcpy(peripheral, address);
-	    currentBLEMode = WS_BLE_CENTRAL;
+
+	strcpy(peripheral, address);
+	currentBLEMode = WS_BLE_CENTRAL;
+
         return true;
     } else if (currentBackend == IO_BLE) {
 	//TODO:
@@ -159,14 +161,14 @@ bool IO::sendModel(float* weights, size_t len) {
 			while (!attemptConnectionToPeripheral(peripheral) && (millis() - start) < 35000) {
 			    ;
 			}
-			if (millis() - start >= 35000)
+			if (millis() - start >= 35000) {
 				// Timeout broke the loop
+				Serial.println("Timeout while waiting for peripheral");
 				return false;
-
-			// Central logic
-			return weightShareSend(currentBLEMode, MSG_TYPE_WEIGHTS, (uint8_t*) weights, len);
+			}
 		}
 		// Peripheral logic
+		Serial.println("sendModel()");
 		return weightShareSend(currentBLEMode, MSG_TYPE_WEIGHTS, (uint8_t*) weights, len);
 	}
 	// TODO:
@@ -176,6 +178,7 @@ bool IO::sendModel(float* weights, size_t len) {
 
 bool IO::sendNBatches(const uint16_t n_a, size_t len) {
 	if (currentBackend == IO_SERIAL) {
+		Serial.println("SendNBatches()");
 		bool res =  weightShareReceive(currentBLEMode, MSG_TYPE_BATCH_COUNT, (uint8_t*) &n_a, len);
 		if (currentBLEMode == WS_BLE_PERIPHERAL)
 			// Return to previous state
@@ -195,6 +198,7 @@ bool IO::receiveModel(float* weights, size_t len) {
 				readvertiseBLE();
 			}
 		}
+		Serial.println("receiveModel()");
 		// receive
 		return weightShareReceive(currentBLEMode, MSG_TYPE_WEIGHTS, (uint8_t*) weights, len);
 	}
@@ -205,6 +209,7 @@ bool IO::receiveModel(float* weights, size_t len) {
 
 bool IO::receiveNBatches(uint16_t *n_b, size_t len) {
 	if (currentBackend == IO_SERIAL) {
+		Serial.println("receiveNBatches()");
 		return weightShareReceive(currentBLEMode, MSG_TYPE_BATCH_COUNT, (uint8_t*) n_b, len);
 	}
 	// TODO:
