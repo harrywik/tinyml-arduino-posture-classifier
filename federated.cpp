@@ -9,19 +9,23 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 	n_a = *nBatchesOnDevice;
 
 	W_out_length = OUTPUT_SIZE * RESERVOIR_SIZE;
-	if (Coms.getMac()) {
+	if (Coms.getUUID()) {
+		// THIS DEV IS CENTRAL
 		// first send
-		Coms.sendModel((const float*) W_a, W_out_length);
+		Coms.sendModel((const float*) W_a, sizeof(float) * W_out_length);
 		Coms.sendNBatches((const uint16_t) n_a, sizeof(uint16_t));
 		// then receive
-		Coms.receiveModel(W_b, W_out_length);
+		Coms.receiveModel(W_b, sizeof(float) * W_out_length);
 		Coms.receiveNBatches(&n_b, sizeof(uint16_t));
+		// RETURN TO PRIOR STATE
+		deinitAsCentral();
 	} else {
+		// THIS DEV IS PERIPHERAL
 		// first receive
-		Coms.receiveModel(W_b, W_out_length);
+		Coms.receiveModel(W_b, sizeof(float) * W_out_length);
 		Coms.receiveNBatches(&n_b, sizeof(uint16_t));
 		// then send
-		Coms.sendModel((const float*) W_a, W_out_length);
+		Coms.sendModel((const float*) W_a, sizeof(float) * W_out_length);
 		Coms.sendNBatches((const uint16_t) n_a, sizeof(uint16_t));
 	}
 

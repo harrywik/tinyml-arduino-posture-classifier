@@ -2,9 +2,9 @@
 #include <Arduino.h> 
 #include "button.h"
 
-enum BLEMode {
-    BLE_CENTRAL,
-    BLE_PERIPHERAL
+enum WeightShareBLEMode {
+    WS_BLE_CENTRAL,
+    WS_BLE_PERIPHERAL
 };
 
 enum SerialCommandType {
@@ -18,7 +18,7 @@ enum SerialCommandType {
     CMD_SHARE_WEIGHTS
 };
 
-typedef char CounterpartyMAC[18];
+typedef char uuid[37];
 
 enum IOBackend {
     IO_SERIAL,
@@ -35,16 +35,18 @@ public:
     SerialCommandType receive();
     // request label input
     bool getLabel(uint8_t* labelBuffer, uint16_t nSamples);
-    // receive counterparty MAC address
-    bool getMAC(void);
+    // receive counterparty UUID address
+    bool getUUID(void);
     // model weight exchange, for federated learning
     bool sendModel(float* weights, size_t len);
+    bool sendNBatches(const uint16_t n_a, size_t len);
     bool receiveModel(float* weights, size_t len);
+    bool receiveNBatches(uint16_t *n_b, size_t len);
 
 private:
     IOBackend currentBackend = IO_SERIAL;
-    BLEMode currentBLEMode = BLE_PERIPHERAL;
-    CounterpartyMAC peripheral = {};
+    WeightShareBLEMode currentBLEMode = WS_BLE_PERIPHERAL;
+    uuid peripheral = {};
 };
 
 extern IO Coms;

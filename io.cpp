@@ -113,14 +113,14 @@ bool IO::getLabel(uint8_t* labelBuffer, uint16_t nSamples) {
     return false;
 }
 
-bool IO::getMAC(void) {
+bool IO::getUUID(void) {
     if (currentBackend == IO_SERIAL) {
-        CounterpartyMAC address;
+        uuid address;
 
         while (Serial.available()) { 
             Serial.read(); 
         }
-        Serial.print("MAC-address: ");
+        Serial.print("Counterparty UUID: ");
 
         unsigned long start = millis();
         while (Serial.available() == 0 && (millis() - start) < 30000) {
@@ -129,46 +129,87 @@ bool IO::getMAC(void) {
 
         int bytesRead = Serial.readBytesUntil('\n', address, sizeof(address) - 1); 
 
-        if (bytesRead == 0) {
+        if (bytesRead != sizeof(address) - 1) {
 	    peripheral = {0};
-	    currentBLEMode = BLE_PERIPHERAL;
+	    currentBLEMode = WS_BLE_PERIPHERAL;
             return false;
         }
+
         address[bytesRead] = '\0';
 
         while (Serial.available()) {
             Serial.read();
         }
-	for (size_t c = 0; c < sizeof(address) - 1; c++) {
-	    	if (c % 3 == 2 && address[c] != ':') {
-			Serial.println("MALFORMED MAC...");
-	    		peripheral = {0};
-	    		currentBLEMode = BLE_PERIPHERAL;
-			return false;
-		}
-	}
 	peripheral = address;
-	currentBLEMode = BLE_CENTRAL;
+	currentBLEMode = WS_BLE_CENTRAL;
         return true;
     } else if (currentBackend == IO_BLE) {
 	//TODO:
 	// implement this for bluetooth as well
     }
-    
+
     return false;
 }
 
-// ONLY BLE supported for model exchange
 bool IO::sendModel(float* weights, size_t len) {
-    if (currentBackend == IO_BLE) {
-        return BLESendModel(weights, len);
-    }
-    return false;
+	if (currentBackend == IO_SERIAL) {
+		if (currentBLEMode == WS_BLE_CENTRAL) {
+			startCentralService(peripheral);
+			unsigned long start = millis();
+			// wait for succesfull connection
+			while (!attemptConnectionToPeripheral() && (millis() - start) < 35000) {
+			    ;
+			}
+			if (millis() - start >= 35000)
+				// Timeout broke the loop
+				return false;
+
+			// Central logic
+			return weightShareSend(currentBLEMode, MSG_TYPE_WEIGHTS, (const uint8_t*) weights, len);
+		}
+		// Peripheral logic
+		return weightShareSend(currentBLEMode, MSG_TYPE_WEIGHTS, (const uint8_t*) weights, len);
+	}
+	// TODO:
+	// fix for bluetooth computer connection as well...
+	return false;
+}
+
+bool IO::sendNBatches(const uint16_t n_a, size_t len) {
+	if (currentBackend == IO_SERIAL) {
+		bool res =  weightShareReceive(currentBLEMode, MSG_TYPE_BATCH_COUNT, (const uint8_t*) &n_a, len);
+		if (currentBLEMode == WS_BLE_PERIPHERAL)
+			// Return to previous state
+			deinitAsPeripheral();
+		return res;
+	}
 }
 
 bool IO::receiveModel(float* weights, size_t len) {
-    if (currentBackend == IO_BLE) {
-        return BLEReceiveModel(weights, len);
-    }
-    return false;
+	if (currentBackend == IO_SERIAL) {
+		if (currentBLEMode == WS_BLE_PERIPHERAL) {
+			// Extra logic block as peripheral
+			initBLE();
+
+			while(!isBLEConnected()) {
+				delay(500);
+				readvertiseBLE();
+			}
+		}
+		// receive
+		return weightShareReceive(currentBLEMode, MSG_TYPE_WEIGHTS, (uint8_t*) weights, len);
+	}
+	// TODO:
+	// fix for bluetooth computer connection as well...
+	return false;
 }
+
+bool IO::receiveNBatches(uint16_t *n_b, size_t len) {
+	if (currentBackend == IO_SERIAL) {
+		return weightShareReceive(currentBLEMode, MSG_TYPE_BATCH_COUNT, (uint8_t*) n_b, len);
+	}
+	// TODO:
+	// fix for bluetooth computer connection as well...
+	return false;
+}
+
