@@ -2,8 +2,8 @@
 #define LARGE_BUTTON 13
 
 enum CommunicationMode {
-	USB,
-	BLE
+	MODE_USB,
+	MODE_BLE
 };
 
 void initButton(void);

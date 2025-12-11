@@ -13,7 +13,7 @@ extern void communicateBLEMode(void);
 IO Coms;
 
 void IO::setBackend(CommunicationMode mode) {
-if (mode == BLE) {
+if (mode == MODE_BLE) {
         currentBackend = IO_BLE;
     	initBLE();   
         communicateBLEMode(); // blue LED

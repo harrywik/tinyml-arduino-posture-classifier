@@ -59,7 +59,7 @@ CommunicationMode getCommunicationMode(void) {
             if (millis() - pressStartTime >= LONG_PRESS_THRESHOLD_MS) {
                 // LONG PRESS DETECTED: BLE Mode (Blue LED)
                 communicateBLEMode(); 
-                return BLE; 
+                return MODE_BLE; 
             }
         }
         
@@ -70,7 +70,7 @@ CommunicationMode getCommunicationMode(void) {
             if (pressDuration >= DEBOUNCE_MS) { 
                 // SHORT PRESS DETECTED: USB Mode (Red LED)
                 communicateUSBMode(); 
-                return USB; 
+                return MODE_USB; 
             }
             // Press was noise (too short). Reset state and time and restart the loop.
             buttonPressed = false; 

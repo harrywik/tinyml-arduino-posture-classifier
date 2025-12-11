@@ -32,7 +32,7 @@ bool attemptConnectionToPeripheral(uuid peripheralUUID) {
 	BLEDevice peripheral = BLE.available();
 	if (!peripheral)
 		return false;
-	if (!peripheral.hasServiceUuid(peripheralUUID))
+	if (!peripheral.hasService(peripheralUUID))
 		return false;
 	// Has correct UUID
 	if (BLE.connected()) // this fuction expects 0 argument
@@ -108,12 +108,15 @@ bool weightShareSend(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data, si
 	if (mode == WS_BLE_CENTRAL) {
 		BLEDevice peripheral = BLE.available();
 
-		peripheral.writeValue((uint8_t*)&type, 1);
+		peripheral.connect();
+		peripheral.discoverAttributes();
+		BLECharacteristic remoteChar = peripheral.characteristic(BLE_CHARACTERISTIC_UUID);
+
 		delay(10);
 
 		while (bytes > 0) {
 			chunk = min(bytes, MAX_CHUNK_LENGTH);
-			peripheral.writeValue(ptr, chunk);
+			remoteChar.writeValue(ptr, chunk);
 			delay(10);
 
 			ptr += chunk;
@@ -122,8 +125,8 @@ bool weightShareSend(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data, si
 		return true;
 	} 
 	// mode == WS_BLE_PERIPHERAL
-        sensorCharacteristic.writeValue((uint8_t*)&type, 1);
-        delay(10);
+	sensorCharacteristic.writeValue((uint8_t*)&type, 1);
+	delay(10);
 	BLE.poll();
 
     	while (bytes > 0) {
@@ -147,19 +150,24 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
 	if (mode == WS_BLE_CENTRAL) {
 		BLEDevice peripheral = BLE.available();
 		// check type of incoming
-		while(!peripheral.written()) { 
-			;
+		if (!peripheral) {
+            return false;
+        }
+		BLECharacteristic remoteChar = peripheral.characteristic(BLE_CHARACTERISTIC_UUID);
+        
+		while(!remoteChar.written()) { 
+			BLE.poll();
 		}
-		size_t typeLen = peripheral.valueLength();
+		size_t typeLen = remoteChar.valueLength();
 
-		if (typeLen != 1|| peripheral.value()[0] != type)
+		if (typeLen != 1|| remoteChar.value()[0] != type)
 			return false;
 
 		// correct type 
 		while(received < bytes) {
-			if(peripheral.written()) {
-				chunk = peripheral.valueLength();
-				memcpy(ptr + received, peripheral.value(), chunk);
+			if(remoteChar.written()) {
+				chunk = remoteChar.valueLength();
+				memcpy(ptr + received, remoteChar.value(), chunk);
 				received += chunk;
 			}
 			BLE.poll();
