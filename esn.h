@@ -15,7 +15,10 @@ struct ESN {
     float W_out[OUTPUT_SIZE][RESERVOIR_SIZE]; // Output weights (trainable)
 };
 
-typedef float shareableWeights[OUTPUT_SIZE][RESERVOIR_SIZE];
+typedef struct {
+    float weights[OUTPUT_SIZE][RESERVOIR_SIZE];
+} shareableWeights;
+
 
 void initESN();
 

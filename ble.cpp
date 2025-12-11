@@ -35,7 +35,7 @@ bool attemptConnectionToPeripheral(uuid peripheralUUID) {
 	if (!peripheral.hasServiceUuid(peripheralUUID))
 		return false;
 	// Has correct UUID
-	if (BLE.connected(peripheral))
+	if (BLE.connected()) // this fuction expects 0 argument
 		return true;
 	// Otherwise retry
 	BLE.scanForUuid(peripheralUUID);
@@ -45,7 +45,6 @@ bool attemptConnectionToPeripheral(uuid peripheralUUID) {
 bool initBLE(void) {
 	if (!BLE.begin())
 		return false;
-	BLE.setAdvertisedService(customService);
 
 	String name = "id";
 

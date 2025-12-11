@@ -47,7 +47,7 @@ void initESN() {
 
 shareableWeights getW_out(void) {
 	ShareableWeights W_out;
-	memcpy(W_out, esn.W_out, sizeof(esn.W_out));
+	memcpy(W_out.weights, esn.W_out, sizeof(esn.W_out));
 	return W_out;
 }
 

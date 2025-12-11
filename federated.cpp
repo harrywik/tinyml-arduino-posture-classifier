@@ -8,7 +8,7 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 	uint16_t n_a, n_b, n_tot;
 	n_a = *nBatchesOnDevice;
 
-	W_out_length = OUTPUT_SIZE * RESERVOIR_SIZE;
+	uint16_t W_out_length = OUTPUT_SIZE * RESERVOIR_SIZE;
 	if (Coms.getUUID()) {
 		// THIS DEV IS CENTRAL
 		// first send
