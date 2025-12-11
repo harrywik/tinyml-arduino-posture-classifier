@@ -1,3 +1,4 @@
+#include <ArduinoBLE.h>
 #include "io.h"
 #include "ble.h"
 #include "serial_protocol.h"
@@ -159,7 +160,8 @@ bool IO::sendModel(float* weights, size_t len) {
 			unsigned long start = millis();
 			// wait for succesfull connection
 			while (!attemptConnectionToPeripheral(peripheral) && (millis() - start) < 35000) {
-			    ;
+				BLE.poll();
+				delay(10);
 			}
 			if (millis() - start >= 35000) {
 				// Timeout broke the loop
@@ -194,7 +196,8 @@ bool IO::receiveModel(float* weights, size_t len) {
 			initBLE();
 
 			while(!isBLEConnected()) {
-				delay(500);
+				BLE.poll();
+				delay(10);
 				readvertiseBLE();
 			}
 		}

@@ -33,9 +33,6 @@ bool attemptConnectionToPeripheral(uuid peripheralUUID) {
     if (!peripheral)
         return false;
 
-    if (!peripheral.hasService(peripheralUUID))
-        return false;
-
     // Attempt connection
     if (!peripheral.connect()) {
         // If it fails, resume scanning
@@ -113,10 +110,13 @@ bool weightShareSend(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data, si
 	if (mode == WS_BLE_CENTRAL) {
 		BLEDevice peripheral = BLE.available();
 
-		peripheral.connect();
 		peripheral.discoverAttributes();
 		BLECharacteristic remoteChar = peripheral.characteristic(BLE_CHARACTERISTIC_UUID);
 
+		delay(10);
+
+		// Send type byte first
+		remoteChar.writeValue((uint8_t*)&type, 1);
 		delay(10);
 
 		while (bytes > 0) {
@@ -156,7 +156,7 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
 		BLEDevice peripheral = BLE.available();
 		// check type of incoming
 		if (!peripheral) {
-            return false;
+            		return false;
         }
 		BLECharacteristic remoteChar = peripheral.characteristic(BLE_CHARACTERISTIC_UUID);
         
@@ -182,8 +182,8 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
 	// mode == WS_BLE_PERIPHERAL
 
 	// check type of incoming
-	while(!sensorCharacteristic.written()) { 
-		;
+	while(!sensorCharacteristic.written()) {
+		BLE.poll();
 	}
 	size_t typeLen = sensorCharacteristic.valueLength();
 

@@ -2,8 +2,8 @@
 #include <Arduino.h>
 #include "io.h"
 
-#define BLE_SLAVE_UUID "97BC2A91-292A-4B46-B4A0-6265F274F98D"
-#define BLE_CHARACTERISTIC_UUID "C5647BAA-3C6D-4FBD-9863-3D8F71FA60EF"
+#define BLE_SLAVE_UUID "bc58da3e-2db6-4e56-942a-699d8594e8a3"
+#define BLE_CHARACTERISTIC_UUID "ab0addfd-cf41-46a7-8190-beb6e07de642"
 #define MAX_CHUNK_LENGTH 48
 
 // Protocol message types
