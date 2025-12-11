@@ -9,24 +9,56 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 	n_a = *nBatchesOnDevice;
 
 	uint16_t W_out_length = OUTPUT_SIZE * RESERVOIR_SIZE;
+
 	if (Coms.getUUID()) {
 		// THIS DEV IS CENTRAL
 		// first send
-		Coms.sendModel((float*) W_a.weights, sizeof(float) * W_out_length);
-		Coms.sendNBatches((const uint16_t) n_a, sizeof(uint16_t));
+		if (!Coms.sendModel((float*) W_a.weights, sizeof(float) * W_out_length)) {
+			Serial.println("Failed on Coms.sendModel()");
+			return false;
+		}
+		if (!Coms.sendNBatches((const uint16_t) n_a, sizeof(uint16_t))) {
+			Serial.println("Failed on Coms.sendNBatches()");
+			return false;
+		}
+
 		// then receive
-		Coms.receiveModel((float*) W_b.weights, sizeof(float) * W_out_length);
-		Coms.receiveNBatches(&n_b, sizeof(uint16_t));
+		if (!Coms.receiveModel((float*) W_b.weights, sizeof(float) * W_out_length)) {
+			Serial.println("Failed on Coms.receiveModel()");
+			return false;
+		}
+
+		if (!Coms.receiveNBatches(&n_b, sizeof(uint16_t))) {
+			Serial.println("Failed on Coms.receiveNBatches()");
+			return false;
+		}
+
 		// RETURN TO PRIOR STATE
 		deinitAsCentral();
 	} else {
 		// THIS DEV IS PERIPHERAL
 		// first receive
-		Coms.receiveModel((float*) W_b.weights, sizeof(float) * W_out_length);
-		Coms.receiveNBatches(&n_b, sizeof(uint16_t));
+		if (!Coms.receiveModel((float*) W_b.weights, sizeof(float) * W_out_length)) {
+			Serial.println("Failed on Coms.receiveModel()");
+			return false;
+		}
+
+		if (!Coms.receiveNBatches(&n_b, sizeof(uint16_t)))  {
+			Serial.println("Failed on Coms.receiveNBatches()");
+			return false;
+		}
+
 		// then send
-		Coms.sendModel((float*) W_a.weights, sizeof(float) * W_out_length);
-		Coms.sendNBatches((const uint16_t) n_a, sizeof(uint16_t));
+		if (!Coms.sendModel((float*) W_a.weights, sizeof(float) * W_out_length)) {
+			Serial.println("Failed on Coms.sendModel()");
+			return false;
+		}
+
+		if (!Coms.sendNBatches((const uint16_t) n_a, sizeof(uint16_t))) {
+			Serial.println("Failed on Coms.sendNBatches()");
+			return false;
+		}
+
 	}
 
 	n_tot = n_a + n_b;

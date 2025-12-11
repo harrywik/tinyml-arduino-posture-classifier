@@ -120,7 +120,7 @@ bool IO::getUUID(void) {
         while (Serial.available()) { 
             Serial.read(); 
         }
-        Serial.print("Counterparty UUID: ");
+        Serial.print("Counterparty UUID (or Empty for peripheral): ");
 
         unsigned long start = millis();
         while (Serial.available() == 0 && (millis() - start) < 30000) {

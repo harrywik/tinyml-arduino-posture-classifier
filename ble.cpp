@@ -29,17 +29,22 @@ bool startCentralService(uuid peripheralUUID) {
 }
 
 bool attemptConnectionToPeripheral(uuid peripheralUUID) {
-	BLEDevice peripheral = BLE.available();
-	if (!peripheral)
-		return false;
-	if (!peripheral.hasService(peripheralUUID))
-		return false;
-	// Has correct UUID
-	if (BLE.connected()) // this fuction expects 0 argument
-		return true;
-	// Otherwise retry
-	BLE.scanForUuid(peripheralUUID);
-	return false;
+    BLEDevice peripheral = BLE.available();
+    if (!peripheral)
+        return false;
+
+    if (!peripheral.hasService(peripheralUUID))
+        return false;
+
+    // Attempt connection
+    if (!peripheral.connect()) {
+        // If it fails, resume scanning
+        BLE.scanForUuid(peripheralUUID);
+        return false;
+    }
+
+    // Now connected
+    return true;
 }
 
 bool initBLE(void) {
