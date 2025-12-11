@@ -46,13 +46,14 @@ void initESN() {
 }
 
 shareableWeights getW_out(void) {
-	ShareableWeights W_out;
+	shareableWeights W_out;
 	memcpy(W_out.weights, esn.W_out, sizeof(esn.W_out));
 	return W_out;
 }
 
 void setW_out(shareableWeights W_new) {
-	memcpy(W_new, esn.W_out, sizeof(esn.W_out));
+	// memcpy(W_new, esn.W_out, sizeof(esn.W_out)); // the logic seems to be worng
+    memcpy(esn.W_out, W_new.weights, sizeof(esn.W_out));
 }
 
 void persistOutputWeights(void) {

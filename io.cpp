@@ -139,8 +139,8 @@ bool IO::getUUID(void) {
         while (Serial.available()) {
             Serial.read();
         }
-	peripheral = address;
-	currentBLEMode = WS_BLE_CENTRAL;
+	    strcpy(peripheral, address);
+	    currentBLEMode = WS_BLE_CENTRAL;
         return true;
     } else if (currentBackend == IO_BLE) {
 	//TODO:
@@ -156,7 +156,7 @@ bool IO::sendModel(float* weights, size_t len) {
 			startCentralService(peripheral);
 			unsigned long start = millis();
 			// wait for succesfull connection
-			while (!attemptConnectionToPeripheral() && (millis() - start) < 35000) {
+			while (!attemptConnectionToPeripheral(peripheral) && (millis() - start) < 35000) {
 			    ;
 			}
 			if (millis() - start >= 35000)
@@ -164,10 +164,10 @@ bool IO::sendModel(float* weights, size_t len) {
 				return false;
 
 			// Central logic
-			return weightShareSend(currentBLEMode, MSG_TYPE_WEIGHTS, (const uint8_t*) weights, len);
+			return weightShareSend(currentBLEMode, MSG_TYPE_WEIGHTS, (uint8_t*) weights, len);
 		}
 		// Peripheral logic
-		return weightShareSend(currentBLEMode, MSG_TYPE_WEIGHTS, (const uint8_t*) weights, len);
+		return weightShareSend(currentBLEMode, MSG_TYPE_WEIGHTS, (uint8_t*) weights, len);
 	}
 	// TODO:
 	// fix for bluetooth computer connection as well...
@@ -176,7 +176,7 @@ bool IO::sendModel(float* weights, size_t len) {
 
 bool IO::sendNBatches(const uint16_t n_a, size_t len) {
 	if (currentBackend == IO_SERIAL) {
-		bool res =  weightShareReceive(currentBLEMode, MSG_TYPE_BATCH_COUNT, (const uint8_t*) &n_a, len);
+		bool res =  weightShareReceive(currentBLEMode, MSG_TYPE_BATCH_COUNT, (uint8_t*) &n_a, len);
 		if (currentBLEMode == WS_BLE_PERIPHERAL)
 			// Return to previous state
 			deinitAsPeripheral();

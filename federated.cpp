@@ -12,20 +12,20 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 	if (Coms.getUUID()) {
 		// THIS DEV IS CENTRAL
 		// first send
-		Coms.sendModel((const float*) W_a, sizeof(float) * W_out_length);
+		Coms.sendModel((float*) W_a.weights, sizeof(float) * W_out_length);
 		Coms.sendNBatches((const uint16_t) n_a, sizeof(uint16_t));
 		// then receive
-		Coms.receiveModel(W_b, sizeof(float) * W_out_length);
+		Coms.receiveModel((float*) W_b.weights, sizeof(float) * W_out_length);
 		Coms.receiveNBatches(&n_b, sizeof(uint16_t));
 		// RETURN TO PRIOR STATE
 		deinitAsCentral();
 	} else {
 		// THIS DEV IS PERIPHERAL
 		// first receive
-		Coms.receiveModel(W_b, sizeof(float) * W_out_length);
+		Coms.receiveModel((float*) W_b.weights, sizeof(float) * W_out_length);
 		Coms.receiveNBatches(&n_b, sizeof(uint16_t));
 		// then send
-		Coms.sendModel((const float*) W_a, sizeof(float) * W_out_length);
+		Coms.sendModel((float*) W_a.weights, sizeof(float) * W_out_length);
 		Coms.sendNBatches((const uint16_t) n_a, sizeof(uint16_t));
 	}
 
@@ -33,7 +33,7 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 
 	for(size_t i = 0; i < OUTPUT_SIZE; i++) {
 		for(size_t j = 0; j < RESERVOIR_SIZE; j++) {
-			W_a[i][j] = W_a[i][j]*n_a + W_b[i][j]*n_b / n_tot;
+			W_a.weights[i][j] = W_a.weights[i][j]*n_a + W_b.weights[i][j]*n_b / n_tot;
 		}
 	}
 	*nBatchesOnDevice = n_tot;
