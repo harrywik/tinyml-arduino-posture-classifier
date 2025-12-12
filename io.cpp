@@ -118,6 +118,9 @@ bool IO::getUUID(void) {
     if (currentBackend == IO_SERIAL) {
         uuid address;
 
+        Serial.print("My UUID (BLE_SLAVE_UUID): ");
+        Serial.println(BLE_SLAVE_UUID);
+
         while (Serial.available()) { 
             Serial.read(); 
         }
@@ -125,57 +128,98 @@ bool IO::getUUID(void) {
 
         unsigned long start = millis();
         while (Serial.available() == 0 && (millis() - start) < 30000) {
-            ;
+            delay(5);
+            BLE.poll();
         }
 
-        int bytesRead = Serial.readBytesUntil('\n', address, sizeof(address) - 1); 
-
-        if (bytesRead != sizeof(address) - 1) {
-	    currentBLEMode = WS_BLE_PERIPHERAL;
-            return false;
+        if (Serial.available() == 0) {
+        // No input -> peripheral mode
+        Serial.println("\nNo input -> peripheral mode");
+        currentBLEMode = WS_BLE_PERIPHERAL;
+        return false;
         }
 
+        // read "\n"
+        int bytesRead = Serial.readBytesUntil('\n', address, sizeof(address) - 1);
         address[bytesRead] = '\0';
+
+        // remove trailing '\r' if present
+        if (bytesRead > 0 && address[bytesRead - 1] == '\r') {
+        address[bytesRead - 1] = '\0';
+        bytesRead--;
+        }
 
         while (Serial.available()) {
             Serial.read();
         }
 
-	strcpy(peripheral, address);
-	currentBLEMode = WS_BLE_CENTRAL;
+        // Empty input -> peripheral mode
+        if (bytesRead == 0) {
+            Serial.println("\nEmpty input -> peripheral mode");
+            currentBLEMode = WS_BLE_PERIPHERAL;
+            return false;
+        }
+        // Not empty, central mode
+        strcpy(peripheral, address);
+        currentBLEMode = WS_BLE_CENTRAL;
 
         return true;
-    } else if (currentBackend == IO_BLE) {
-	//TODO:
-	// implement this for bluetooth as well
-    }
-
+    } 
+    // TODO: IO_BLE backend
     return false;
 }
 
 bool IO::sendModel(float* weights, size_t len) {
-	if (currentBackend == IO_SERIAL) {
-		if (currentBLEMode == WS_BLE_CENTRAL) {
-			startCentralService(peripheral);
-			unsigned long start = millis();
-			// wait for succesfull connection
-			while (!attemptConnectionToPeripheral(peripheral) && (millis() - start) < 35000) {
-				BLE.poll();
-				delay(10);
-			}
-			if (millis() - start >= 35000) {
-				// Timeout broke the loop
-				Serial.println("Timeout while waiting for peripheral");
-				return false;
-			}
-		}
+    if (currentBackend != IO_SERIAL) {
+        Serial.println("IO::sendModel() only supported in SERIAL mode");
+        return false;
+    }
+
+    if (currentBLEMode == WS_BLE_CENTRAL) {
+
+        Serial.println("IO::sendModel() as CENTRAL");
+        if (!startCentralService(peripheral)) {
+            Serial.println("startCentralService() failed");
+            return false;
+        }
+
+        // startCentralService(peripheral);
+        unsigned long start = millis();
+
+        // wait for succesfull connection
+        while (!attemptConnectionToPeripheral(peripheral) && (millis() - start) < 30000) {
+            BLE.poll();
+            delay(10);
+        }
+        if (millis() - start >= 30000) {
+            // Timeout broke the loop
+            Serial.println("Timeout while waiting for peripheral");
+            return false;
+        }
+    }
+
+    if (currentBLEMode == WS_BLE_PERIPHERAL && !isBLEConnected()) {
+        Serial.println("IO::sendModel() as PERIPHERAL");
+        initBLE();
+        unsigned long start = millis();
+        while (!isBLEConnected() && (millis() - start) < 35000) {
+            BLE.poll();
+            delay(10);
+            readvertiseBLE();
+        }
+        if (!isBLEConnected()) {
+            Serial.println("Timeout while waiting for central");
+            return false;
+        }
+    }
+
 		// Peripheral logic
-		Serial.println("sendModel()");
-		return weightShareSend(currentBLEMode, MSG_TYPE_WEIGHTS, (uint8_t*) weights, len);
-	}
+    Serial.println("sendModel()");
+    return weightShareSend(currentBLEMode, MSG_TYPE_WEIGHTS, (uint8_t*) weights, len);
+
 	// TODO:
 	// fix for bluetooth computer connection as well...
-	return false;
+
 }
 
 bool IO::sendNBatches(const uint16_t n_a, size_t len) {
