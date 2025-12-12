@@ -132,39 +132,67 @@ bool IO::getUUID(void) {
             BLE.poll();
         }
 
+        // ---- Case 1: timeout -> PERIPHERAL ----
         if (Serial.available() == 0) {
-        // No input -> peripheral mode
-        Serial.println("\nNo input -> peripheral mode");
-        currentBLEMode = WS_BLE_PERIPHERAL;
-        return false;
+            Serial.println("\nNo input -> peripheral mode");
+            currentBLEMode = WS_BLE_PERIPHERAL;
+
+            // IMPORTANT: start advertising immediately
+            if (!initBLE()) {
+                Serial.println("initBLE() failed");
+            } else {
+                Serial.println("Peripheral: initBLE() OK, advertising started");
+            }
+
+            return false;
         }
 
-        // read "\n"
+        // read until "\n"
         int bytesRead = Serial.readBytesUntil('\n', address, sizeof(address) - 1);
         address[bytesRead] = '\0';
 
         // remove trailing '\r' if present
         if (bytesRead > 0 && address[bytesRead - 1] == '\r') {
-        address[bytesRead - 1] = '\0';
-        bytesRead--;
+            address[bytesRead - 1] = '\0';
+            bytesRead--;
         }
 
         while (Serial.available()) {
             Serial.read();
         }
 
-        // Empty input -> peripheral mode
+        // ---- Case 2: empty line -> PERIPHERAL ----
         if (bytesRead == 0) {
             Serial.println("\nEmpty input -> peripheral mode");
             currentBLEMode = WS_BLE_PERIPHERAL;
+
+            if (!initBLE()) {
+                Serial.println("initBLE() failed");
+            } else {
+                Serial.println("Peripheral: initBLE() OK, advertising started");
+            }
+
             return false;
         }
-        // Not empty, central mode
+
+        // ---- Case 3: non-empty -> CENTRAL ----
+        // (optional) trim leading/trailing spaces just in case copy/paste adds them
+        // simple trim:
+        while (bytesRead > 0 && address[0] == ' ') { memmove(address, address + 1, --bytesRead); address[bytesRead] = '\0'; }
+        while (bytesRead > 0 && address[bytesRead - 1] == ' ') { address[--bytesRead] = '\0'; }
+
+        Serial.print("\nCentral will scan UUID: [");
+        Serial.print(address);
+        Serial.println("]");
+
         strcpy(peripheral, address);
+        Serial.println("Peripheral set to: ");
+        Serial.print(peripheral);
         currentBLEMode = WS_BLE_CENTRAL;
 
         return true;
-    } 
+    }
+
     // TODO: IO_BLE backend
     return false;
 }

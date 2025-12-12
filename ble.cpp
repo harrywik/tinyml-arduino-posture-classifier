@@ -28,21 +28,41 @@ void deinitAsPeripheral(void) {
 
 bool startCentralService(uuid peripheralUUID) {
 	if (!BLE.begin()) return false;
-	BLE.scanForUuid(peripheralUUID);
+	// BLE.scanForUuid(peripheralUUID);
+	BLE.stopScan();
+	BLE.scan();
 	return true;
 }
 
 bool attemptConnectionToPeripheral(uuid peripheralUUID) {
     BLEDevice peripheral = BLE.available();
     if (!peripheral)
-		Serial.println("No peripheral available");
+		//Serial.println("No peripheral available");
         return false;
 
     // Attempt connection
+	String expectedPrefix = "id" + String(peripheralUUID).substring(0, 4);
+	String name = peripheral.localName();
+
+	// if (name.length() == 0 || name != expectedPrefix) {
+	// 	// Not the correct peripheral
+	// 	Serial.println("Peripheral name mismatch: " + name);
+	// 	return false;
+	// }	
+
+	Serial.print("Found candidate: ");
+	Serial.print(name);
+	Serial.print(" addr=");
+	Serial.println(peripheral.address());
+
+	BLE.stopScan();
+	delay(20);
+
     if (!peripheral.connect()) {
         // If it fails, resume scanning
-        BLE.scanForUuid(peripheralUUID);
+        //BLE.scanForUuid(peripheralUUID);
 		Serial.println("Failed to connect to peripheral");
+		BLE.scan();
         return false;
     }
 
@@ -53,7 +73,7 @@ bool attemptConnectionToPeripheral(uuid peripheralUUID) {
     if (!connectedPeripheral.discoverAttributes()) {
         Serial.println("discoverAttributes() failed");
         connectedPeripheral.disconnect();
-        BLE.scanForUuid(peripheralUUID);
+        // BLE.scanForUuid(peripheralUUID);
         return false;
     }
 
@@ -75,7 +95,7 @@ bool attemptConnectionToPeripheral(uuid peripheralUUID) {
 
     Serial.println("Timeout waiting for remote characteristic");
     connectedPeripheral.disconnect();
-    BLE.scanForUuid(peripheralUUID);
+    // BLE.scanForUuid(peripheralUUID);
     return false;
 }
 
@@ -106,6 +126,7 @@ bool initBLE(void) {
 
   	// --- Start Advertising ---
   	BLE.advertise();
+	Serial.println("initBLE(): BLE.advertise() called");
 	return true;
 }
 
