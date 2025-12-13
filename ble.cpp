@@ -44,11 +44,11 @@ bool attemptConnectionToPeripheral(uuid peripheralUUID) {
 	String expectedPrefix = "id" + String(peripheralUUID).substring(0, 4);
 	String name = peripheral.localName();
 
-	// if (name.length() == 0 || name != expectedPrefix) {
-	// 	// Not the correct peripheral
-	// 	Serial.println("Peripheral name mismatch: " + name);
-	// 	return false;
-	// }	
+	if (name.length() == 0 || name != expectedPrefix) {
+		// Not the correct peripheral
+		// Serial.println("Peripheral name mismatch: " + name);
+		return false;
+	}	
 
 	Serial.print("Found candidate: ");
 	Serial.print(name);
