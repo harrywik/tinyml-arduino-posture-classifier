@@ -291,10 +291,11 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
 
 	size_t typeLen = sensorCharacteristic.valueLength();
 
-    if (typeLen != 1 || sensorCharacteristic.value()[0] != type)
+    if (typeLen != 1 || sensorCharacteristic.value()[0] != type){
 		Serial.println("Received incorrect type byte");
         return false;
-
+	}
+	
 	start = millis();
 
 	while(received < bytes && (millis() - start) < DATA_TIMEOUT_MS) {
