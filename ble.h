@@ -2,9 +2,9 @@
 #include <Arduino.h>
 #include "io.h"
 
-#define BLE_SLAVE_UUID "bc58da3e-2db6-4e56-942a-699d8594e8a3"
+#define BLE_SLAVE_UUID "346466ea-bab7-41bf-a3b2-3da10ab33ad5"
 #define BLE_CHARACTERISTIC_UUID "ab0addfd-cf41-46a7-8190-beb6e07de642"
-#define MAX_CHUNK_LENGTH 48
+#define MAX_CHUNK_LENGTH 20
 
 // Protocol message types
 enum BLEMsgType {

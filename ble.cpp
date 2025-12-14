@@ -165,24 +165,42 @@ bool weightShareSend(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data, si
 
 	if (mode == WS_BLE_CENTRAL) {
 		// Use stored connected peripheral (attributes already discovered)
-		Serial.println("weightShareSend() as CENTRAL");
+		// Serial.println("weightShareSend() as CENTRAL");
 		BLECharacteristic remoteChar = connectedPeripheral.characteristic(BLE_CHARACTERISTIC_UUID);
 
 		if (!remoteChar) {
 			Serial.println("Remote characteristic not found");
 			return false;
 		}
+
+		if (!remoteChar.canWrite()) {
+			Serial.println("Remote characteristic is NOT writable");
+			return false;
+		}	
 		
 		BLE.poll();
 		delay(10);
 
 		// Send type byte first
-		remoteChar.writeValue((uint8_t*)&type, 1);
-		delay(10);
+		// remoteChar.writeValue((uint8_t*)&type, 1);
+		// BLE.poll();
+		// delay(10);
+
+		if (!remoteChar.writeValue((uint8_t*)&type, 1)) {
+			Serial.println("Failed to write type");
+			return false;
+		}
+
+		BLE.poll();
+		delay(20);
 
 		while (bytes > 0) {
 			chunk = min(bytes, MAX_CHUNK_LENGTH);
-			remoteChar.writeValue(ptr, chunk);
+			if (!remoteChar.writeValue(ptr, chunk)) {
+				Serial.println("Failed to write payload chunk");
+				return false;
+			}
+			BLE.poll();
 			delay(20);
 
 			ptr += chunk;
@@ -190,7 +208,7 @@ bool weightShareSend(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data, si
 		}
 
 		// Give peripheral extra time to process all chunks
-		delay(100);
+		// delay(100);
 		return true;
 	} 
 	// mode == WS_BLE_PERIPHERAL
@@ -217,8 +235,8 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
 	size_t chunk;
 
 	// Simple timeout to avoid infinite blocking
-    const unsigned long TYPE_TIMEOUT_MS  = 5000;
-    const unsigned long DATA_TIMEOUT_MS  = 10000;
+    const unsigned long TYPE_TIMEOUT_MS  = 30000;
+    const unsigned long DATA_TIMEOUT_MS  = 30000;
 
 	if (mode == WS_BLE_CENTRAL) {
 		// Use stored connected peripheral
@@ -276,12 +294,23 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
     }
 
 	// mode == WS_BLE_PERIPHERAL
+    BLEDevice central = BLE.central();
+    // if (!central || !central.connected()) {
+    //     Serial.println("Peripheral not connected to any central");
+    //     return false;
+    // }
 
 	// check type of incoming
 	unsigned long start = millis();
 	while(!sensorCharacteristic.written() && (millis() - start) < TYPE_TIMEOUT_MS) {
 		BLE.poll();
-	}
+		delay(5);
+		// refresh central state
+        if (!central|| !central.connected()) {
+            Serial.println("Central disconnected while waiting type");
+            return false;
+        }
+    }
 
     if (!sensorCharacteristic.written()) {
         // timeout
@@ -295,7 +324,7 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
 		Serial.println("Received incorrect type byte");
         return false;
 	}
-	
+
 	start = millis();
 
 	while(received < bytes && (millis() - start) < DATA_TIMEOUT_MS) {

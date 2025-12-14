@@ -228,7 +228,7 @@ bool IO::sendModel(float* weights, size_t len) {
 
     if (currentBLEMode == WS_BLE_PERIPHERAL && !isBLEConnected()) {
         Serial.println("IO::sendModel() as PERIPHERAL");
-        initBLE();
+        // initBLE();
         unsigned long start = millis();
         while (!isBLEConnected() && (millis() - start) < 35000) {
             BLE.poll();
@@ -265,7 +265,7 @@ bool IO::receiveModel(float* weights, size_t len) {
 	if (currentBackend == IO_SERIAL) {
 		if (currentBLEMode == WS_BLE_PERIPHERAL && !isBLEConnected()) {
 			// Extra logic block as peripheral - only init if not connected
-			initBLE();
+			// initBLE();
 
 			while(!isBLEConnected()) {
 				BLE.poll();
