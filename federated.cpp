@@ -65,7 +65,7 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 
 	for(size_t i = 0; i < OUTPUT_SIZE; i++) {
 		for(size_t j = 0; j < RESERVOIR_SIZE; j++) {
-			W_a.weights[i][j] = W_a.weights[i][j]*n_a + W_b.weights[i][j]*n_b / n_tot;
+			W_a.weights[i][j] = (W_a.weights[i][j] * n_a + W_b.weights[i][j] * n_b) / n_tot;
 		}
 	}
 	*nBatchesOnDevice = n_tot;
