@@ -240,6 +240,8 @@ bool weightShareSend(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data, si
 	BLE.poll();
 	delay(50);
 
+	int chunkCount = 0;
+	size_t totalBytes = bytes;
 	while (bytes > 0) {
 		chunk = min(bytes, MAX_CHUNK_LENGTH);
 		sensorCharacteristic.writeValue(ptr, chunk);
@@ -248,7 +250,18 @@ bool weightShareSend(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data, si
 
 		ptr += chunk;
 		bytes -= chunk;
+		chunkCount++;
+		Serial.print("Peripheral sent chunk ");
+		Serial.print(chunkCount);
+		Serial.print(": ");
+		Serial.print(chunk);
+		Serial.println(" bytes");
 	}
+	Serial.print("Peripheral sent total of ");
+	Serial.print(chunkCount);
+	Serial.print(" chunks, ");
+	Serial.print(totalBytes);
+	Serial.println(" bytes");
 
 	return true;
 }

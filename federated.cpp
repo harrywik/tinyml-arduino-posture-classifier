@@ -65,7 +65,7 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 
 		// Wait for central to receive the model before sending batch count
 		Serial.println("Peripheral: waiting before sending batch count...");
-		delay(2000);
+		delay(5000);
 
 		if (!Coms.sendNBatches((const uint16_t) n_a, sizeof(uint16_t))) {
 			Serial.println("Failed on Coms.sendNBatches()");
