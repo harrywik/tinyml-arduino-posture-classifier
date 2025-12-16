@@ -234,6 +234,8 @@ bool weightShareSend(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data, si
 		return true;
 	} 
 	// mode == WS_BLE_PERIPHERAL
+	Serial.print("Peripheral sending type byte: ");
+	Serial.println(type);
 	sensorCharacteristic.writeValue((uint8_t*)&type, 1);
 	BLE.poll();
 	delay(50);
