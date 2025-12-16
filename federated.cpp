@@ -75,10 +75,16 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 	}
 
 	n_tot = n_a + n_b;
-
+	float w_new, w_old;
 	for(size_t i = 0; i < OUTPUT_SIZE; i++) {
 		for(size_t j = 0; j < RESERVOIR_SIZE; j++) {
-			W_a.weights[i][j] = (W_a.weights[i][j] * n_a + W_b.weights[i][j] * n_b) / n_tot;
+			w_old = W_a.weights[i][j];
+			w_new = (W_a.weights[i][j] * n_a + W_b.weights[i][j] * n_b) / n_tot;
+			Serial.print("Old=");
+			Serial.println(w_old);
+			Serial.print("New=");
+			Serial.println(w_new);
+			W_a.weights[i][j] = w_new;
 		}
 	}
 	*nBatchesOnDevice = n_tot;
