@@ -292,9 +292,8 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
 
         // 2) Read data chunks until we have 'bytes' bytes
         start = millis();
+        int chunkCount = 0;
         while (received < bytes && (millis() - start) < DATA_TIMEOUT_MS) {
-            BLE.poll();
-            delay(10);
             BLE.poll();
 
             // Check if value was updated (via notification)
@@ -308,11 +307,22 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
                     chunk = min((size_t)len, remaining);
                     memcpy(ptr + received, buf, chunk);
                     received += chunk;
+                    chunkCount++;
+                    Serial.print("Chunk ");
+                    Serial.print(chunkCount);
+                    Serial.print(": ");
+                    Serial.print(chunk);
+                    Serial.print(" bytes, total: ");
+                    Serial.println(received);
                     // reset timeout after progress
                     start = millis();
                 }
             }
+            delay(10);
         }
+        Serial.print("Received ");
+        Serial.print(chunkCount);
+        Serial.print(" chunks, ");
 		Serial.println("Received total bytes: " + String(received));
         return (received == bytes);
     }
