@@ -4,7 +4,7 @@
 #include "esn.h"
 
 BLEService customService(BLE_SLAVE_UUID);
-uint8_t permissions = BLERead | BLEWrite | BLENotify;
+uint8_t permissions = BLERead | BLEWrite | BLEWriteWithoutResponse | BLENotify;
 BLECharacteristic sensorCharacteristic(BLE_CHARACTERISTIC_UUID, permissions, 64);
 
 // Store connected peripheral for central mode
@@ -192,7 +192,7 @@ bool weightShareSend(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data, si
 		}
 
 		BLE.poll();
-		delay(20);
+		delay(50);
 
 		while (bytes > 0) {
 			chunk = min(bytes, MAX_CHUNK_LENGTH);
@@ -201,7 +201,7 @@ bool weightShareSend(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data, si
 				return false;
 			}
 			BLE.poll();
-			delay(20);
+			delay(50);
 
 			ptr += chunk;
 			bytes -= chunk;
