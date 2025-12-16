@@ -302,44 +302,59 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
 
 	// check type of incoming
 	unsigned long start = millis();
-	while(!sensorCharacteristic.written() && (millis() - start) < TYPE_TIMEOUT_MS) {
+	bool gotType = false;
+	size_t lastLen = 0;
+
+	while(!gotType && (millis() - start) < TYPE_TIMEOUT_MS) {
 		BLE.poll();
 		delay(5);
+
 		// refresh central state
         if (!central|| !central.connected()) {
             Serial.println("Central disconnected while waiting type");
             return false;
         }
+
+		// Check if value has been updated (either .written() or value length changed)
+		size_t currentLen = sensorCharacteristic.valueLength();
+		if (sensorCharacteristic.written() || (currentLen > 0 && currentLen != lastLen)) {
+			if (currentLen == 1 && sensorCharacteristic.value()[0] == type) {
+				gotType = true;
+				break;
+			} else if (currentLen == 1) {
+				Serial.println("Received incorrect type byte");
+				return false;
+			}
+			lastLen = currentLen;
+		}
     }
 
-    if (!sensorCharacteristic.written()) {
+    if (!gotType) {
         // timeout
 		Serial.println("Timeout waiting for type byte");
         return false;
     }
 
-	size_t typeLen = sensorCharacteristic.valueLength();
-
-    if (typeLen != 1 || sensorCharacteristic.value()[0] != type){
-		Serial.println("Received incorrect type byte");
-        return false;
-	}
-
 	start = millis();
+	lastLen = 1; // We just read the type byte (length 1)
 
 	while(received < bytes && (millis() - start) < DATA_TIMEOUT_MS) {
-        if (sensorCharacteristic.written()) {
-            size_t available = sensorCharacteristic.valueLength();
-            if (available > 0) {
+		BLE.poll();
+		delay(5);
+
+		// Check if value has been updated (either .written() or value length changed)
+		size_t currentLen = sensorCharacteristic.valueLength();
+        if (sensorCharacteristic.written() || (currentLen > 0 && currentLen != lastLen)) {
+            if (currentLen > 0) {
                 size_t remaining = bytes - received;
-                chunk = min(available, remaining);
+                chunk = min(currentLen, remaining);
                 memcpy(ptr + received, sensorCharacteristic.value(), chunk);
                 received += chunk;
+                lastLen = currentLen;
                 // reset timeout after progress
                 start = millis();
             }
         }
-        BLE.poll();
     }
 	Serial.println("Received total bytes: " + String(received));
 	return (received == bytes);
