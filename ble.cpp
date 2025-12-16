@@ -94,6 +94,18 @@ bool attemptConnectionToPeripheral(uuid peripheralUUID) {
                     Serial.println("Failed to subscribe to characteristic");
                 } else {
                     Serial.println("Subscribed to characteristic");
+
+                    // Flush any stale notifications by polling and discarding updates
+                    for (int i = 0; i < 10; i++) {
+                        BLE.poll();
+                        if (remoteChar.valueUpdated()) {
+                            // Discard stale value
+                            uint8_t dummy[64];
+                            remoteChar.readValue(dummy, sizeof(dummy));
+                            Serial.println("Flushed stale notification");
+                        }
+                        delay(10);
+                    }
                 }
             }
 
