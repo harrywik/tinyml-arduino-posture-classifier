@@ -223,14 +223,14 @@ bool weightShareSend(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data, si
 	} 
 	// mode == WS_BLE_PERIPHERAL
 	sensorCharacteristic.writeValue((uint8_t*)&type, 1);
-	delay(10);
 	BLE.poll();
+	delay(50);
 
 	while (bytes > 0) {
 		chunk = min(bytes, MAX_CHUNK_LENGTH);
 		sensorCharacteristic.writeValue(ptr, chunk);
-		delay(10);
 		BLE.poll();
+		delay(50);
 
 		ptr += chunk;
 		bytes -= chunk;
@@ -267,6 +267,8 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
 
 		while (!gotType && (millis() - start) < TYPE_TIMEOUT_MS) {
 			BLE.poll();
+			delay(10);
+			BLE.poll();
 
 			// Check if value was updated (via notification or direct read)
 			if (remoteChar.valueUpdated()) {
@@ -278,7 +280,6 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
 					break;
 				}
 			}
-			delay(5);
 		}
 
 		if (!gotType || header[0] != type) {
@@ -289,6 +290,8 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
         // 2) Read data chunks until we have 'bytes' bytes
         start = millis();
         while (received < bytes && (millis() - start) < DATA_TIMEOUT_MS) {
+            BLE.poll();
+            delay(10);
             BLE.poll();
 
             // Check if value was updated (via notification)
@@ -306,8 +309,6 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
                     start = millis();
                 }
             }
-
-            delay(5);
         }
 		Serial.println("Received total bytes: " + String(received));
         return (received == bytes);
