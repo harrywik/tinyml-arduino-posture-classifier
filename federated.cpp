@@ -20,7 +20,7 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 
 		// Wait for peripheral to receive the model before sending batch count
 		Serial.println("Central: waiting before sending batch count...");
-		delay(2000);
+		delay(5000);
 
 		if (!Coms.sendNBatches((const uint16_t) n_a, sizeof(uint16_t))) {
 			Serial.println("Failed on Coms.sendNBatches()");
@@ -55,7 +55,7 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 
 		// Wait for central to be ready to receive before sending
 		Serial.println("Peripheral: waiting for central to be ready...");
-		delay(1000);
+		delay(3000);
 
 		// then send
 		if (!Coms.sendModel((float*) W_a.weights, sizeof(float) * W_out_length)) {
@@ -65,7 +65,7 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 
 		// Wait for central to receive the model before sending batch count
 		Serial.println("Peripheral: waiting before sending batch count...");
-		delay(5000);
+		delay(8000);
 
 		if (!Coms.sendNBatches((const uint16_t) n_a, sizeof(uint16_t))) {
 			Serial.println("Failed on Coms.sendNBatches()");
