@@ -275,7 +275,10 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
 				int len = remoteChar.valueLength();
 				if (len == 1) {
 					remoteChar.readValue(header, sizeof(header));
-					Serial.println("Received type byte");
+					Serial.print("Received type byte: ");
+					Serial.print(header[0]);
+					Serial.print(" Expected: ");
+					Serial.println(type);
 					gotType = true;
 					break;
 				}
