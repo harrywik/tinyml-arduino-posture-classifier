@@ -53,6 +53,10 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 			return false;
 		}
 
+		// Wait for central to be ready to receive before sending
+		Serial.println("Peripheral: waiting for central to be ready...");
+		delay(1000);
+
 		// then send
 		if (!Coms.sendModel((float*) W_a.weights, sizeof(float) * W_out_length)) {
 			Serial.println("Failed on Coms.sendModel()");
