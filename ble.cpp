@@ -87,6 +87,16 @@ bool attemptConnectionToPeripheral(uuid peripheralUUID) {
 
         if (remoteChar) {
             Serial.println("Remote characteristic discovered");
+
+            // Subscribe to the characteristic if it supports notifications
+            if (remoteChar.canSubscribe()) {
+                if (!remoteChar.subscribe()) {
+                    Serial.println("Failed to subscribe to characteristic");
+                } else {
+                    Serial.println("Subscribed to characteristic");
+                }
+            }
+
             return true;
         }
 
@@ -256,13 +266,18 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
 		unsigned long start = millis();
 
 		while (!gotType && (millis() - start) < TYPE_TIMEOUT_MS) {
-			int len = remoteChar.readValue(header, sizeof(header));
-			if (len == 1) {
-				Serial.println("Received type byte");
-				gotType = true;
-				break;
-			}
 			BLE.poll();
+
+			// Check if value was updated (via notification or direct read)
+			if (remoteChar.valueUpdated()) {
+				int len = remoteChar.valueLength();
+				if (len == 1) {
+					remoteChar.readValue(header, sizeof(header));
+					Serial.println("Received type byte");
+					gotType = true;
+					break;
+				}
+			}
 			delay(5);
 		}
 
@@ -274,19 +289,24 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
         // 2) Read data chunks until we have 'bytes' bytes
         start = millis();
         while (received < bytes && (millis() - start) < DATA_TIMEOUT_MS) {
-            uint8_t buf[MAX_CHUNK_LENGTH];
-            int len = remoteChar.readValue(buf, sizeof(buf));
-
-            if (len > 0) {
-                size_t remaining = bytes - received;
-                chunk = min((size_t)len, remaining);
-                memcpy(ptr + received, buf, chunk);
-                received += chunk;
-                // reset timeout after progress
-                start = millis();
-            }
-	
             BLE.poll();
+
+            // Check if value was updated (via notification)
+            if (remoteChar.valueUpdated()) {
+                uint8_t buf[MAX_CHUNK_LENGTH];
+                int len = remoteChar.valueLength();
+
+                if (len > 0) {
+                    remoteChar.readValue(buf, len);
+                    size_t remaining = bytes - received;
+                    chunk = min((size_t)len, remaining);
+                    memcpy(ptr + received, buf, chunk);
+                    received += chunk;
+                    // reset timeout after progress
+                    start = millis();
+                }
+            }
+
             delay(5);
         }
 		Serial.println("Received total bytes: " + String(received));
