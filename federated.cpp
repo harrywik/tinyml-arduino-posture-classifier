@@ -14,7 +14,7 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 		// THIS DEV IS CENTRAL
 		// Wait for peripheral to be ready to receive
 		Serial.println("Central: waiting for peripheral to be ready...");
-		delay(3000);
+		delay(5000);
 
 		// Validate data before sending
 		Serial.print("Central: First few W_a values to send: ");
@@ -54,6 +54,10 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 		// THIS DEV IS PERIPHERAL
 		// Initialize W_b to zeros to detect receive failures
 		memset(W_b.weights, 0, sizeof(W_b.weights));
+
+		// Small delay to ensure receive handler is ready
+		Serial.println("Peripheral: setting up to receive...");
+		delay(1000);
 
 		// first receive
 		if (!Coms.receiveModel((float*) W_b.weights, sizeof(float) * W_out_length)) {
