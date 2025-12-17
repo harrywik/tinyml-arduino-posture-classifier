@@ -99,8 +99,12 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 			Serial.print(" j: ");
 			Serial.print(j);
 			Serial.print(" | ");
-			Serial.print("old_weight:");
-			Serial.print(old_weight);
+			Serial.print("W_a.weight:");
+			Serial.print(W_a.weights[i][j]);
+			Serial.print(", W_b.weight:");
+			Serial.print(W_b.weights[i][j]);
+			// Serial.print(", old_weight:");
+			// Serial.print(old_weight);
 			Serial.print(", new_weight:");
 			Serial.println(new_weight);
 		}
