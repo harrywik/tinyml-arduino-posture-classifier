@@ -55,9 +55,10 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 		// Initialize W_b to zeros to detect receive failures
 		memset(W_b.weights, 0, sizeof(W_b.weights));
 
-		// Small delay to ensure receive handler is ready
-		Serial.println("Peripheral: setting up to receive...");
-		delay(1000);
+		// Wait for central to connect and be ready to send
+		// Central delays 5s + connection time, so peripheral should wait longer
+		Serial.println("Peripheral: waiting for central to connect and prepare...");
+		delay(8000);
 
 		// first receive
 		if (!Coms.receiveModel((float*) W_b.weights, sizeof(float) * W_out_length)) {
