@@ -1,3 +1,3 @@
 #pragma once
 
-bool shareW_out(uint16_t* nBatchesOnDevice);
+bool shareW_out(uint16_t *nBatchesOnDevice);

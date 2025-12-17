@@ -1,6 +1,6 @@
 #pragma once
-#include <Arduino.h>
 #include "io.h"
+#include <Arduino.h>
 
 #define BLE_SLAVE_UUID "346466ea-bab7-41bf-a3b2-3da10ab33ad5"
 #define BLE_CHARACTERISTIC_UUID "ab0addfd-cf41-46a7-8190-beb6e07de642"
@@ -15,19 +15,21 @@ enum BLEMsgType {
 
 bool initBLE(void);
 
-bool isBLEConnected(void); 
+bool isBLEConnected(void);
 void readvertiseBLE(void);
 
-void BLESend(const String& msg);
+void BLESend(const String &msg);
 bool BLEReceive(String &cmd);
 
 // For model weight exchange
-bool BLESendModel(float* weights, size_t len);
-bool BLEReceiveModel(float* weights, size_t len);
+bool BLESendModel(float *weights, size_t len);
+bool BLEReceiveModel(float *weights, size_t len);
 
 void deinitAsCentral(void);
 void deinitAsPeripheral(void);
 bool startCentralService(uuid peripheralUUID);
 bool attemptConnectionToPeripheral(uuid peripheralUUID);
-bool weightShareSend(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data, size_t bytes);
-bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data, size_t bytes);
+bool weightShareSend(WeightShareBLEMode mode, BLEMsgType type, uint8_t *data,
+                     size_t bytes);
+bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t *data,
+                        size_t bytes);

@@ -2,10 +2,10 @@
 #include "esn.h"
 #include "imu_features.h"
 // These are the standard Mbed OS return codes for success and common errors.
-#define KV_R_OK                 0   // Success
-#define KV_R_NO_KEY             -3  // Key not found
-#define KV_R_ERROR              -1  // Generic error 
-#define KV_R_WRITE_ERROR        -10 // Write failure
+#define KV_R_OK 0            // Success
+#define KV_R_NO_KEY -3       // Key not found
+#define KV_R_ERROR -1        // Generic error
+#define KV_R_WRITE_ERROR -10 // Write failure
 
 // Simple get/set
 // W_out
@@ -19,6 +19,6 @@ bool setKVPersistedEMA(float EMAs[NUM_FEATURES]);
 bool rmKVpersistedEMA(void);
 
 // Number of batches processed
-bool getNProcessedBatches(uint16_t* nBatches);
+bool getNProcessedBatches(uint16_t *nBatches);
 bool incNProcessedBatches(uint16_t increment);
 bool rmNProcessedBatches(void);

@@ -21,152 +21,149 @@ static bool windowFilled = false;
 
 // Initialize IMU sensor
 bool initIMU() {
-    	if (!IMU.begin()) {
-        	return false;
-    	}
-	// Load EMAs if available
-    	getKVPersistedEMA(EMAs);
-    	return true;
+  if (!IMU.begin()) {
+    return false;
+  }
+  // Load EMAs if available
+  getKVPersistedEMA(EMAs);
+  return true;
 }
 
-bool IMUwindowReady(void) {
-	return windowFilled;
-}
-
+bool IMUwindowReady(void) { return windowFilled; }
 
 // Add new sample to the circular buffer
 void updateIMU() {
-    float ax, ay, az;
-    float gx, gy, gz;
-    float mx, my, mz;
+  float ax, ay, az;
+  float gx, gy, gz;
+  float mx, my, mz;
 
-    if (IMU.accelerationAvailable() && 
-        IMU.gyroscopeAvailable() &&
-        IMU.magneticFieldAvailable()) {
+  if (IMU.accelerationAvailable() && IMU.gyroscopeAvailable() &&
+      IMU.magneticFieldAvailable()) {
 
-        IMU.readAcceleration(ax, ay, az);
-        IMU.readGyroscope(gx, gy, gz);
-        IMU.readMagneticField(mx, my, mz);
+    IMU.readAcceleration(ax, ay, az);
+    IMU.readGyroscope(gx, gy, gz);
+    IMU.readMagneticField(mx, my, mz);
 
-        accelX[sampleIndex] = ax;
-        accelY[sampleIndex] = ay;
-        accelZ[sampleIndex] = az;
+    accelX[sampleIndex] = ax;
+    accelY[sampleIndex] = ay;
+    accelZ[sampleIndex] = az;
 
-        gyroX[sampleIndex] = gx;
-        gyroY[sampleIndex] = gy;
-        gyroZ[sampleIndex] = gz;
+    gyroX[sampleIndex] = gx;
+    gyroY[sampleIndex] = gy;
+    gyroZ[sampleIndex] = gz;
 
-        magX[sampleIndex] = mx;
-        magY[sampleIndex] = my;
-        magZ[sampleIndex] = mz;
+    magX[sampleIndex] = mx;
+    magY[sampleIndex] = my;
+    magZ[sampleIndex] = mz;
 
-        sampleIndex++;
-        if (sampleIndex >= WINDOW_SIZE) {
-            sampleIndex = 0;
-            windowFilled = true;
-        }
+    sampleIndex++;
+    if (sampleIndex >= WINDOW_SIZE) {
+      sampleIndex = 0;
+      windowFilled = true;
     }
+  }
 }
 
 // Compute mean and standard deviation for an array
-static void computeMeanStd(const float* data, uint8_t size, float& mean, float& stddev) {
-    mean = 0.0;
-    for (uint8_t i = 0; i < size; i++) {
-        mean += data[i];
-    }
-    mean /= size;
+static void computeMeanStd(const float *data, uint8_t size, float &mean,
+                           float &stddev) {
+  mean = 0.0;
+  for (uint8_t i = 0; i < size; i++) {
+    mean += data[i];
+  }
+  mean /= size;
 
-    stddev = 0.0;
-    for (uint8_t i = 0; i < size; i++) {
-        float diff = data[i] - mean;
-        stddev += diff * diff;
-    }
-    stddev = sqrt(stddev / size);
+  stddev = 0.0;
+  for (uint8_t i = 0; i < size; i++) {
+    float diff = data[i] - mean;
+    stddev += diff * diff;
+  }
+  stddev = sqrt(stddev / size);
 }
 
 // Compute feature vector
 FeatureVector computeFeatures() {
-    FeatureVector fv;
+  FeatureVector fv;
 
-    uint8_t count = windowFilled ? WINDOW_SIZE : sampleIndex;
+  uint8_t count = windowFilled ? WINDOW_SIZE : sampleIndex;
 
-    float mean, stddev;
-    uint8_t idx = 0;
+  float mean, stddev;
+  uint8_t idx = 0;
 
-    // Accel X/Y/Z
-    computeMeanStd(accelX, count, mean, stddev);
-    fv.features[idx++] = mean;
-    fv.features[idx++] = stddev;
+  // Accel X/Y/Z
+  computeMeanStd(accelX, count, mean, stddev);
+  fv.features[idx++] = mean;
+  fv.features[idx++] = stddev;
 
-    computeMeanStd(accelY, count, mean, stddev);
-    fv.features[idx++] = mean;
-    fv.features[idx++] = stddev;
+  computeMeanStd(accelY, count, mean, stddev);
+  fv.features[idx++] = mean;
+  fv.features[idx++] = stddev;
 
-    computeMeanStd(accelZ, count, mean, stddev);
-    fv.features[idx++] = mean;
-    fv.features[idx++] = stddev;
+  computeMeanStd(accelZ, count, mean, stddev);
+  fv.features[idx++] = mean;
+  fv.features[idx++] = stddev;
 
-    // Gyro X/Y/Z
-    computeMeanStd(gyroX, count, mean, stddev);
-    fv.features[idx++] = mean;
-    fv.features[idx++] = stddev;
+  // Gyro X/Y/Z
+  computeMeanStd(gyroX, count, mean, stddev);
+  fv.features[idx++] = mean;
+  fv.features[idx++] = stddev;
 
-    computeMeanStd(gyroY, count, mean, stddev);
-    fv.features[idx++] = mean;
-    fv.features[idx++] = stddev;
+  computeMeanStd(gyroY, count, mean, stddev);
+  fv.features[idx++] = mean;
+  fv.features[idx++] = stddev;
 
-    computeMeanStd(gyroZ, count, mean, stddev);
-    fv.features[idx++] = mean;
-    fv.features[idx++] = stddev;
+  computeMeanStd(gyroZ, count, mean, stddev);
+  fv.features[idx++] = mean;
+  fv.features[idx++] = stddev;
 
-    // Mag X/Y/Z
-    computeMeanStd(magX, count, mean, stddev);
-    fv.features[idx++] = mean;
-    fv.features[idx++] = stddev;
+  // Mag X/Y/Z
+  computeMeanStd(magX, count, mean, stddev);
+  fv.features[idx++] = mean;
+  fv.features[idx++] = stddev;
 
-    computeMeanStd(magY, count, mean, stddev);
-    fv.features[idx++] = mean;
-    fv.features[idx++] = stddev;
+  computeMeanStd(magY, count, mean, stddev);
+  fv.features[idx++] = mean;
+  fv.features[idx++] = stddev;
 
-    computeMeanStd(magZ, count, mean, stddev);
-    fv.features[idx++] = mean;
-    fv.features[idx++] = stddev;
+  computeMeanStd(magZ, count, mean, stddev);
+  fv.features[idx++] = mean;
+  fv.features[idx++] = stddev;
 
-    return fv;
+  return fv;
 }
 
-void collectBuffer(FeatureVector (&featureBuffer)[BATCH_SIZE], uint16_t *nSamples) {
-	*nSamples = 0;
-	while (*nSamples < BATCH_SIZE) {
-	    updateIMU(); 
-	    if (windowFilled && sampleIndex == 0) {
-	        FeatureVector fv = computeFeatures();
-		updateEMA(fv);
-		featureBuffer[(*nSamples)++] = fv;
-	    }
-	}
+void collectBuffer(FeatureVector (&featureBuffer)[BATCH_SIZE],
+                   uint16_t *nSamples) {
+  *nSamples = 0;
+  while (*nSamples < BATCH_SIZE) {
+    updateIMU();
+    if (windowFilled && sampleIndex == 0) {
+      FeatureVector fv = computeFeatures();
+      updateEMA(fv);
+      featureBuffer[(*nSamples)++] = fv;
+    }
+  }
 }
 
 void updateEMA(FeatureVector vector) {
-	for (size_t fi = 0; fi < NUM_FEATURES; fi++) {
-		EMAs[fi] = (1 - EMA_ALPHA) * EMAs[fi] + EMA_ALPHA * vector.features[fi];
-	}
+  for (size_t fi = 0; fi < NUM_FEATURES; fi++) {
+    EMAs[fi] = (1 - EMA_ALPHA) * EMAs[fi] + EMA_ALPHA * vector.features[fi];
+  }
 }
 
-void persistEMA(void) {
-    	setKVPersistedEMA(EMAs);
-}
+void persistEMA(void) { setKVPersistedEMA(EMAs); }
 
 void normalizeVector(FeatureVector &vector) {
-	for (size_t fi = 0; fi < NUM_FEATURES; fi++) {
-		vector.features[fi] -= EMAs[fi];
-	}
+  for (size_t fi = 0; fi < NUM_FEATURES; fi++) {
+    vector.features[fi] -= EMAs[fi];
+  }
 }
 
-void normalizeBuffer(FeatureVector (&featureBuffer)[BATCH_SIZE], uint16_t nSamples) {
-	for (size_t wi = 0; wi < nSamples; wi++) {
-		for (size_t fi = 0; fi < NUM_FEATURES; fi++) {
-			featureBuffer[wi].features[fi] -= EMAs[fi];
-		}
-	}
+void normalizeBuffer(FeatureVector (&featureBuffer)[BATCH_SIZE],
+                     uint16_t nSamples) {
+  for (size_t wi = 0; wi < nSamples; wi++) {
+    for (size_t fi = 0; fi < NUM_FEATURES; fi++) {
+      featureBuffer[wi].features[fi] -= EMAs[fi];
+    }
+  }
 }
