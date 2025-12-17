@@ -69,13 +69,31 @@ bool attemptConnectionToPeripheral(uuid peripheralUUID) {
     // Store the connected peripheral for later use
     connectedPeripheral = peripheral;
 
-	// Discover attributes
-    if (!connectedPeripheral.discoverAttributes()) {
-        Serial.println("discoverAttributes() failed");
+	// Give connection time to stabilize before discovering attributes
+	Serial.println("Connection established, waiting before discovering attributes...");
+	for (int i = 0; i < 50; i++) {
+		BLE.poll();
+		delay(20);
+	}
+
+	// Discover attributes with retry
+	bool discovered = false;
+	for (int attempt = 0; attempt < 3 && !discovered; attempt++) {
+		if (attempt > 0) {
+			Serial.print("Retry discoverAttributes() attempt ");
+			Serial.println(attempt + 1);
+			delay(500);
+		}
+		discovered = connectedPeripheral.discoverAttributes();
+	}
+
+    if (!discovered) {
+        Serial.println("discoverAttributes() failed after retries");
         connectedPeripheral.disconnect();
         // BLE.scanForUuid(peripheralUUID);
         return false;
     }
+	Serial.println("Attributes discovered successfully");
 
     // IMPORTANT: wait until the remote characteristic is actually available
     unsigned long start = millis();
