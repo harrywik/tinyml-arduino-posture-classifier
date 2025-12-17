@@ -16,6 +16,12 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 		Serial.println("Central: waiting for peripheral to be ready...");
 		delay(3000);
 
+		// Validate data before sending
+		Serial.print("Central: First few W_a values to send: ");
+		Serial.print(W_a.weights[0][0]); Serial.print(", ");
+		Serial.print(W_a.weights[0][1]); Serial.print(", ");
+		Serial.println(W_a.weights[0][2]);
+
 		// first send
 		if (!Coms.sendModel((float*) W_a.weights, sizeof(float) * W_out_length)) {
 			Serial.println("Failed on Coms.sendModel()");
@@ -46,11 +52,20 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 		deinitAsCentral();
 	} else {
 		// THIS DEV IS PERIPHERAL
+		// Initialize W_b to zeros to detect receive failures
+		memset(W_b.weights, 0, sizeof(W_b.weights));
+
 		// first receive
 		if (!Coms.receiveModel((float*) W_b.weights, sizeof(float) * W_out_length)) {
 			Serial.println("Failed on Coms.receiveModel()");
 			return false;
 		}
+
+		// Validate received data
+		Serial.print("Peripheral: First few W_b values: ");
+		Serial.print(W_b.weights[0][0]); Serial.print(", ");
+		Serial.print(W_b.weights[0][1]); Serial.print(", ");
+		Serial.println(W_b.weights[0][2]);
 
 		if (!Coms.receiveNBatches(&n_b, sizeof(uint16_t)))  {
 			Serial.println("Failed on Coms.receiveNBatches()");
