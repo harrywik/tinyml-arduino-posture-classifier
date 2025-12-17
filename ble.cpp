@@ -364,11 +364,12 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
 	// check type of incoming
 	unsigned long start = millis();
 	bool gotType = false;
-	size_t lastLen = 0;
+	uint8_t header[1];
 
 	while(!gotType && (millis() - start) < TYPE_TIMEOUT_MS) {
 		BLE.poll();
-		delay(5);
+		delay(20);
+		BLE.poll();
 
 		// refresh central state
         if (!central|| !central.connected()) {
@@ -376,23 +377,24 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
             return false;
         }
 
-		// Check if value has been updated (either .written() or value length changed)
-		size_t currentLen = sensorCharacteristic.valueLength();
-		if (sensorCharacteristic.written() || (currentLen > 0 && currentLen != lastLen)) {
-			if (currentLen == 1 && sensorCharacteristic.value()[0] == type) {
+		// Check if value was written
+		if (sensorCharacteristic.written()) {
+			int len = sensorCharacteristic.valueLength();
+			if (len == 1) {
+				sensorCharacteristic.readValue(header, sizeof(header));
+				Serial.print("Received type byte: ");
+				Serial.print(header[0]);
+				Serial.print(" Expected: ");
+				Serial.println(type);
 				gotType = true;
 				break;
-			} else if (currentLen == 1) {
-				Serial.println("Received incorrect type byte");
-				return false;
 			}
-			lastLen = currentLen;
 		}
     }
 
-    if (!gotType) {
-        // timeout
-		Serial.println("Timeout waiting for type byte");
+    if (!gotType || header[0] != type) {
+        // timeout or wrong type
+		Serial.println("Failed to receive correct type byte");
         return false;
     }
 
