@@ -22,20 +22,13 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 		Serial.println("Central: waiting for peripheral to be ready...");
 		delay(10000);
 
-		// Wait for READY signal from peripheral (includes connection establishment)
-		Serial.println("Central: waiting for READY signal from peripheral...");
-		if (!Coms.waitForReady()) {
-			Serial.println("Failed to receive READY signal from peripheral");
-			return false;
-		}
-
 		// Validate data before sending
 		Serial.print("Central: First few W_a values to send: ");
 		Serial.print(W_a.weights[0][0]); Serial.print(", ");
 		Serial.print(W_a.weights[0][1]); Serial.print(", ");
 		Serial.println(W_a.weights[0][2]);
 
-		// first send (connection already established via waitForReady)
+		// first send (will establish connection)
 		if (!Coms.sendModel((float*) W_a.weights, sizeof(float) * W_out_length)) {
 			Serial.println("Failed on Coms.sendModel()");
 			return false;
@@ -50,10 +43,10 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 			return false;
 		}
 
-		// Send READY signal to peripheral before receiving
-		Serial.println("Central: sending READY signal before receiving from peripheral...");
-		if (!Coms.sendReady()) {
-			Serial.println("Failed to send READY signal to peripheral");
+		// Wait for READY signal from peripheral before receiving
+		Serial.println("Central: waiting for READY signal from peripheral...");
+		if (!Coms.waitForReady()) {
+			Serial.println("Failed to receive READY signal from peripheral");
 			return false;
 		}
 
@@ -77,18 +70,11 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 		memset(W_b.weights, 0, sizeof(W_b.weights));
 
 		// Wait for central to connect and be ready to send
-		// Central delays 10s + connection time, so peripheral should wait longer
+		// Central delays 10s + connection time, so peripheral delays longer
 		Serial.println("Peripheral: waiting for central to connect and prepare...");
-		delay(8000);
+		delay(12000);
 
-		// Send READY signal to central (connection will be established in sendReady)
-		Serial.println("Peripheral: sending READY signal to central...");
-		if (!Coms.sendReady()) {
-			Serial.println("Failed to send READY signal");
-			return false;
-		}
-
-		// first receive
+		// first receive - this will wait for connection and then receive
 		if (!Coms.receiveModel((float*) W_b.weights, sizeof(float) * W_out_length)) {
 			Serial.println("Failed on Coms.receiveModel()");
 			return false;
@@ -105,12 +91,15 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 			return false;
 		}
 
-		// Wait for READY signal from central before sending
-		Serial.println("Peripheral: waiting for READY signal from central...");
-		if (!Coms.waitForReady()) {
-			Serial.println("Failed to receive READY signal from central");
+		// Send READY signal to central (we're ready to send our data)
+		Serial.println("Peripheral: sending READY signal to central...");
+		if (!Coms.sendReady()) {
+			Serial.println("Failed to send READY signal");
 			return false;
 		}
+
+		// Small delay to ensure central receives READY before we start sending
+		delay(2000);
 
 		// then send
 		if (!Coms.sendModel((float*) W_a.weights, sizeof(float) * W_out_length)) {
