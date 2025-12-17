@@ -397,28 +397,37 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
     }
 
 	start = millis();
-	lastLen = 1; // We just read the type byte (length 1)
+	int chunkCount = 0;
 
 	while(received < bytes && (millis() - start) < DATA_TIMEOUT_MS) {
 		BLE.poll();
-		delay(5);
 
-		// Check if value has been updated (either .written() or value length changed)
-		size_t currentLen = sensorCharacteristic.valueLength();
-        if (sensorCharacteristic.written() || (currentLen > 0 && currentLen != lastLen)) {
-            if (currentLen > 0) {
-                uint8_t buf[MAX_CHUNK_LENGTH];
-                int len = sensorCharacteristic.readValue(buf, MAX_CHUNK_LENGTH);
-                size_t remaining = bytes - received;
-                chunk = min((size_t)len, remaining);
-                memcpy(ptr + received, buf, chunk);
-                received += chunk;
-                lastLen = currentLen;
-                // reset timeout after progress
-                start = millis();
-            }
-        }
-    }
+		// Check if value was written by central
+		if (sensorCharacteristic.written()) {
+			uint8_t buf[MAX_CHUNK_LENGTH];
+			int len = sensorCharacteristic.readValue(buf, MAX_CHUNK_LENGTH);
+
+			if (len > 0) {
+				size_t remaining = bytes - received;
+				chunk = min((size_t)len, remaining);
+				memcpy(ptr + received, buf, chunk);
+				received += chunk;
+				chunkCount++;
+				Serial.print("Chunk ");
+				Serial.print(chunkCount);
+				Serial.print(": ");
+				Serial.print(chunk);
+				Serial.print(" bytes, total: ");
+				Serial.println(received);
+				// reset timeout after progress
+				start = millis();
+			}
+		}
+		delay(20);
+	}
+	Serial.print("Received ");
+	Serial.print(chunkCount);
+	Serial.print(" chunks, ");
 	Serial.println("Received total bytes: " + String(received));
 	return (received == bytes);
 }
