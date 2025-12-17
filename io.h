@@ -42,6 +42,9 @@ public:
     bool sendNBatches(const uint16_t n_a, size_t len);
     bool receiveModel(float* weights, size_t len);
     bool receiveNBatches(uint16_t *n_b, size_t len);
+    // handshake signals for synchronization
+    bool sendReady();
+    bool waitForReady();
 
 private:
     IOBackend currentBackend = IO_SERIAL;

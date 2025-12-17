@@ -271,9 +271,9 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
 	size_t received = 0;
 	size_t chunk;
 
-	// Simple timeout to avoid infinite blocking
-    const unsigned long TYPE_TIMEOUT_MS  = 30000;
-    const unsigned long DATA_TIMEOUT_MS  = 30000;
+	// Increased timeout to handle desynchronized entry
+    const unsigned long TYPE_TIMEOUT_MS  = 60000;
+    const unsigned long DATA_TIMEOUT_MS  = 60000;
 
 	if (mode == WS_BLE_CENTRAL) {
 		// Use stored connected peripheral

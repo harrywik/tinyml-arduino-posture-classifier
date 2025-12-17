@@ -10,7 +10,8 @@
 enum BLEMsgType {
   MSG_TYPE_WEIGHTS = 0,     // Weight data
   MSG_TYPE_BATCH_COUNT = 1, // Batch count
-  MSG_TYPE_DONE = 2         // Exchange completion signal [UNUSED]
+  MSG_TYPE_DONE = 2,        // Exchange completion signal [UNUSED]
+  MSG_TYPE_READY = 3        // Ready signal for handshake
 };
 
 bool initBLE(void);

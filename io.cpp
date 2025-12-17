@@ -204,30 +204,34 @@ bool IO::sendModel(float* weights, size_t len) {
     }
 
     if (currentBLEMode == WS_BLE_CENTRAL) {
-
         Serial.println("IO::sendModel() as CENTRAL");
-        if (!startCentralService(peripheral)) {
-            Serial.println("startCentralService() failed");
-            return false;
-        }
 
-        // startCentralService(peripheral);
-        unsigned long start = millis();
+        // Check if connection already established (e.g., via waitForReady)
+        if (!connectedPeripheral || !connectedPeripheral.connected()) {
+            // Need to establish connection
+            if (!startCentralService(peripheral)) {
+                Serial.println("startCentralService() failed");
+                return false;
+            }
 
-        // wait for succesfull connection
-        while (!attemptConnectionToPeripheral(peripheral) && (millis() - start) < 30000) {
-            BLE.poll();
-            delay(10);
-        }
-        if (millis() - start >= 30000) {
-            // Timeout broke the loop
-            Serial.println("Timeout while waiting for peripheral");
-            return false;
-        }
+            unsigned long start = millis();
+            // wait for successful connection
+            while (!attemptConnectionToPeripheral(peripheral) && (millis() - start) < 30000) {
+                BLE.poll();
+                delay(10);
+            }
+            if (millis() - start >= 30000) {
+                // Timeout broke the loop
+                Serial.println("Timeout while waiting for peripheral");
+                return false;
+            }
 
-        // Connection established, give peripheral time to enter receive mode
-        Serial.println("Central: Connection established, waiting before sending...");
-        delay(3000);
+            // Connection established, give peripheral time to enter receive mode
+            Serial.println("Central: Connection established, waiting before sending...");
+            delay(3000);
+        } else {
+            Serial.println("Central: Using existing connection");
+        }
     }
 
     if (currentBLEMode == WS_BLE_PERIPHERAL && !isBLEConnected()) {
@@ -270,12 +274,21 @@ bool IO::receiveModel(float* weights, size_t len) {
 		if (currentBLEMode == WS_BLE_PERIPHERAL && !isBLEConnected()) {
 			// Extra logic block as peripheral - only init if not connected
 			// initBLE();
+			Serial.println("Peripheral: waiting for central to connect...");
+			unsigned long start = millis();
+			const unsigned long CONNECTION_TIMEOUT = 45000; // 45 seconds
 
-			while(!isBLEConnected()) {
+			while(!isBLEConnected() && (millis() - start) < CONNECTION_TIMEOUT) {
 				BLE.poll();
 				delay(10);
 				readvertiseBLE();
 			}
+
+			if (!isBLEConnected()) {
+				Serial.println("Peripheral: Timeout waiting for central to connect");
+				return false;
+			}
+			Serial.println("Peripheral: Connected to central");
 		}
 		Serial.println("receiveModel()");
 		// receive
@@ -293,6 +306,51 @@ bool IO::receiveNBatches(uint16_t *n_b, size_t len) {
 	}
 	// TODO:
 	// fix for bluetooth computer connection as well...
+	return false;
+}
+
+bool IO::sendReady() {
+	if (currentBackend == IO_SERIAL) {
+		Serial.println("sendReady()");
+		uint8_t readyByte = 1;
+		return weightShareSend(currentBLEMode, MSG_TYPE_READY, &readyByte, sizeof(readyByte));
+	}
+	return false;
+}
+
+bool IO::waitForReady() {
+	if (currentBackend == IO_SERIAL) {
+		// If central, need to establish connection first
+		if (currentBLEMode == WS_BLE_CENTRAL) {
+			Serial.println("waitForReady() as CENTRAL - establishing connection first");
+			if (!startCentralService(peripheral)) {
+				Serial.println("startCentralService() failed");
+				return false;
+			}
+
+			unsigned long start = millis();
+			// wait for successful connection
+			while (!attemptConnectionToPeripheral(peripheral) && (millis() - start) < 30000) {
+				BLE.poll();
+				delay(10);
+			}
+			if (millis() - start >= 30000) {
+				Serial.println("Timeout while waiting for peripheral");
+				return false;
+			}
+			Serial.println("Central: Connection established");
+		}
+
+		Serial.println("waitForReady()");
+		uint8_t readyByte = 0;
+		bool result = weightShareReceive(currentBLEMode, MSG_TYPE_READY, &readyByte, sizeof(readyByte));
+		if (result && readyByte == 1) {
+			Serial.println("Received READY signal");
+			return true;
+		}
+		Serial.println("Failed to receive READY signal");
+		return false;
+	}
 	return false;
 }
 
