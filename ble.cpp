@@ -407,9 +407,11 @@ bool weightShareReceive(WeightShareBLEMode mode, BLEMsgType type, uint8_t* data,
 		size_t currentLen = sensorCharacteristic.valueLength();
         if (sensorCharacteristic.written() || (currentLen > 0 && currentLen != lastLen)) {
             if (currentLen > 0) {
+                uint8_t buf[MAX_CHUNK_LENGTH];
+                int len = sensorCharacteristic.readValue(buf, MAX_CHUNK_LENGTH);
                 size_t remaining = bytes - received;
-                chunk = min(currentLen, remaining);
-                memcpy(ptr + received, sensorCharacteristic.value(), chunk);
+                chunk = min((size_t)len, remaining);
+                memcpy(ptr + received, buf, chunk);
                 received += chunk;
                 lastLen = currentLen;
                 // reset timeout after progress
