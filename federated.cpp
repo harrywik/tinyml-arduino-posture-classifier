@@ -12,6 +12,10 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 
 	if (Coms.getUUID()) {
 		// THIS DEV IS CENTRAL
+		// Wait for peripheral to be ready to receive
+		Serial.println("Central: waiting for peripheral to be ready...");
+		delay(3000);
+
 		// first send
 		if (!Coms.sendModel((float*) W_a.weights, sizeof(float) * W_out_length)) {
 			Serial.println("Failed on Coms.sendModel()");
@@ -100,7 +104,7 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 			Serial.print(j);
 			Serial.print(" | ");
 			Serial.print("W_a.weight:");
-			Serial.print(W_a.weights[i][j]);
+			Serial.print(old_weight);
 			Serial.print(", W_b.weight:");
 			Serial.print(W_b.weights[i][j]);
 			// Serial.print(", old_weight:");
