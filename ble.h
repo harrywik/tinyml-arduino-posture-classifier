@@ -1,5 +1,6 @@
 #pragma once
 #include <Arduino.h>
+#include <ArduinoBLE.h>
 #include "io.h"
 
 #define BLE_SLAVE_UUID "346466ea-bab7-41bf-a3b2-3da10ab33ad5"
@@ -13,6 +14,9 @@ enum BLEMsgType {
   MSG_TYPE_DONE = 2,        // Exchange completion signal [UNUSED]
   MSG_TYPE_READY = 3        // Ready signal for handshake
 };
+
+// Store connected peripheral for central mode
+extern BLEDevice connectedPeripheral;
 
 bool initBLE(void);
 
