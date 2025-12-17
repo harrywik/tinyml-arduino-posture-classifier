@@ -224,6 +224,10 @@ bool IO::sendModel(float* weights, size_t len) {
             Serial.println("Timeout while waiting for peripheral");
             return false;
         }
+
+        // Connection established, give peripheral time to enter receive mode
+        Serial.println("Central: Connection established, waiting before sending...");
+        delay(3000);
     }
 
     if (currentBLEMode == WS_BLE_PERIPHERAL && !isBLEConnected()) {

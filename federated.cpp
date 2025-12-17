@@ -14,7 +14,7 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 		// THIS DEV IS CENTRAL
 		// Wait for peripheral to be ready to receive
 		Serial.println("Central: waiting for peripheral to be ready...");
-		delay(5000);
+		delay(10000);
 
 		// Validate data before sending
 		Serial.print("Central: First few W_a values to send: ");
@@ -22,7 +22,7 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 		Serial.print(W_a.weights[0][1]); Serial.print(", ");
 		Serial.println(W_a.weights[0][2]);
 
-		// first send
+		// first send (this will establish connection, then send)
 		if (!Coms.sendModel((float*) W_a.weights, sizeof(float) * W_out_length)) {
 			Serial.println("Failed on Coms.sendModel()");
 			return false;
