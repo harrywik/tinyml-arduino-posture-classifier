@@ -97,8 +97,9 @@ bool shareW_out(uint16_t* nBatchesOnDevice) {
 			return false;
 		}
 
-		// Small delay to ensure central receives READY before we start sending
-		delay(2000);
+		// Wait for central to finish sending its batch count and start listening for READY
+		Serial.println("Peripheral: waiting for central to be ready to receive...");
+		delay(8000);
 
 		// then send
 		if (!Coms.sendModel((float*) W_a.weights, sizeof(float) * W_out_length)) {
