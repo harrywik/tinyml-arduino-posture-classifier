@@ -105,6 +105,7 @@ void runIteration(void) {
     getNProcessedBatches(&mem);
     uint16_t curr = mem + nBatchesProcessed;
     shareW_out(&curr);
+    nBatchesProcessed = curr - mem;
     communicateUSBMode();
     delay(1000);
     communicateSuccess();
