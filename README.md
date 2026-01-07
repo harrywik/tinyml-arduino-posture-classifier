@@ -1,14 +1,21 @@
 # TinyML Arduino Posture Classifier
 
+## Demo Video
+
+The demonstration video for this project can be accessed via Google Drive:
+
+- 📁 Link: https://drive.google.com/file/d/118CfMS8XQIpwNY_YzR7n_3Xxo_crRGj0/view?usp=drive_link
+
+
 ## Features
 
-- [x] Sample from the IMU's gyro and acc in x,y,z
+- [x] Sample from the IMU's gyro, acc and mag in x,y,z
 - [x] Normalize input features via an exponential moving average
 - [x] Receive labels from user over USB or BLE
 - [x] Train or validate on collected data
 - [x] Infer labels based on reservoir state and output layer weights
 - [x] Persist weights and EMA values using MbedOS KVStore
-- [ ] Share and aggregate output layer weights between boards
+- [x] Share and aggregate output layer weights between boards
 
 ## Installation
 
@@ -90,7 +97,7 @@ As this will not have to scan all available BLE devices.
 
 ### File structure
 ```
-PostureProject.ino // main Arduino file 
+tinyml-arduino-posture-classifier.ino // main Arduino file 
 |--- engine.{cpp,h} // post init operation controller
 |
 |---COLLECTION: 
@@ -98,11 +105,13 @@ PostureProject.ino // main Arduino file
 |        |---persistance.{cpp,h} // write processed weights + EMAs to KV store
 |---MODEL: 
 |        |---esn.{cpp,h} // define model architecture, train, predict, load weights
+|        |---eval.{cpp,h} // evaluate model performance and print confusion matrix, accuracy, precision, recall and F1-score  
 |---IO:
 |        |---io.{cpp,h} // unified interface for all IO to either BLE or USB
 |        |---ble.{cpp,h} // BLE IO
 |        |---serial_protocol.{cpp,h} // USB IO
 |        |---button.{cpp,h} // button functions
 |        |---led.{cpp,h} // LED functions
-```
+|---Federated Learning:
+|        |---federated.{cpp.h} // conduct weight sharing between central and peripheral devices
 
