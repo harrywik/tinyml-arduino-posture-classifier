@@ -2,7 +2,8 @@
 
 ## Demo Video
 
-The demonstration video for this project can be accessed via Google Drive:
+The demonstration video for this project can be accessed via Google Drive.
+Please download the video to view it:
 
 - 📁 Link: https://drive.google.com/file/d/118CfMS8XQIpwNY_YzR7n_3Xxo_crRGj0/view?usp=drive_link
 
